@@ -11,9 +11,9 @@ Requires Node 22.12+, pnpm 10, and Postgres 16+ (Docker or a local install).
 ```bash
 cp .env.example .env            # then set PAYLOAD_SECRET (openssl rand -hex 32) and the seed admin login
 pnpm install
-pnpm db:up                      # Postgres in Docker (or point DATABASE_URL at your own)
+pnpm db:up                      # Postgres in Docker on port 5433 (or point DATABASE_URL at your own)
 pnpm seed:demo                  # real content + placeholder posts so the lists look full
-pnpm dev                        # http://localhost:3000, admin at /admin
+pnpm dev                        # http://localhost:3005, admin at /admin
 ```
 
 `pnpm seed` loads only the real content (site settings, About draft, the 2 archived posts, the 5 archived projects, and your admin user). `pnpm seed:demo` adds 7 placeholder posts and 4 placeholder projects. Delete those in the admin when real posts arrive.
