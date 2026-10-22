@@ -1,0 +1,511 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode: <html class="dark"> is set before paint by ThemeScript. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ *
+ * Design tokens
+ * Light: tangerine band, azure + tangerine highlights.
+ * Dark:  azure band.
+ * "faint" is tuned to pass WCAG AA (4.5:1) for small text.
+ * ------------------------------------------------------------------ */
+:root {
+  --c-bg: #ffffff;
+  --c-fg: #17150f;
+  --c-ink2: #4d4840;
+  --c-mute: #6e6a63;
+  --c-faint: #7a756d;
+  --c-line: #ebe8e3;
+  --c-soft: #f6f4f0;
+  --c-orange: #e05c1f; /* Tangerine: marks, large type, band */
+  --c-orange-text: #c5511b; /* Tangerine for small text (4.5:1 on white) */
+  --c-blue: #1f6fd1; /* Azure */
+  --c-band: var(--c-orange);
+  --stick: 24px;
+  color-scheme: light;
+}
+
+.dark {
+  --c-bg: #101318;
+  --c-fg: #eceff3;
+  --c-ink2: #b3b9c3;
+  --c-mute: #8f96a1;
+  --c-faint: #7d8490;
+  --c-line: #232933;
+  --c-soft: #161a21;
+  --c-orange: #e3672e;
+  --c-orange-text: #e3672e;
+  --c-blue: #6aa8ff;
+  --c-band: var(--c-blue);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-fg: var(--c-fg);
+  --color-ink2: var(--c-ink2);
+  --color-mute: var(--c-mute);
+  --color-faint: var(--c-faint);
+  --color-line: var(--c-line);
+  --color-soft: var(--c-soft);
+  --color-orange: var(--c-orange);
+  --color-orange-text: var(--c-orange-text);
+  --color-blue: var(--c-blue);
+  --color-band: var(--c-band);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+@theme {
+  /* 4px spacing grid: p-4 = 16px, mt-16 = 64px, mt-24 = 96px */
+  --spacing: 4px;
+
+  /* Type scale: 12 / 13.5 / 17 / 19 / 21 / 44 */
+  --text-xs: 12px;
+  --text-sm: 13.5px;
+  --text-base: 17px;
+  --text-md: 19px;
+  --text-lg: 21px;
+  --text-display: clamp(30px, 5vw, 44px);
+  --text-display--line-height: 1.12;
+
+  --breakpoint-sm: 600px;
+  --breakpoint-md: 720px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+@layer base {
+  html {
+    background: var(--c-bg);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg font-sans text-base text-fg antialiased;
+    line-height: 1.6;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--c-blue) 22%, transparent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--c-blue);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Split-chevron motif (from the logo). Used as a CSS mask so it takes
+ * any color. One source of truth for the shape.
+ * ------------------------------------------------------------------ */
+@layer components {
+  :root {
+    --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.5 3.75 14.15 24.5'%3E%3Cpath d='M25.40 14.40L15.00 4.00L11.75 7.25L18.89 14.40ZM25.40 17.60L15.00 28.00L11.75 24.75L18.89 17.60Z'/%3E%3C/svg%3E");
+  }
+  .chev {
+    display: inline-block;
+    flex: none;
+    width: 6px;
+    height: 10px;
+    background: currentColor;
+    -webkit-mask: var(--chev) center / contain no-repeat;
+    mask: var(--chev) center / contain no-repeat;
+  }
+
+  /* Band across the top of every page */
+  .band {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    background: var(--c-band);
+  }
+
+  /* --- Margin index: label column + list column --- */
+  .index-section {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    column-gap: 24px;
+  }
+  .index-label {
+    position: sticky;
+    top: var(--stick);
+    align-self: start;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 20px;
+    font-size: var(--text-sm);
+    line-height: 1.3;
+  }
+  .index-label > .name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--c-fg);
+  }
+  .index-label > .name .chev {
+    color: var(--c-orange);
+    transition: transform 0.25s;
+  }
+  .index-section:hover .index-label > .name .chev {
+    transform: translateX(3px);
+  }
+  .index-rows {
+    border-top: 1px solid var(--c-line);
+    min-width: 0;
+  }
+  .index-offset {
+    margin-left: 144px;
+  }
+  @media (max-width: 719.98px) {
+    .index-section {
+      grid-template-columns: 1fr;
+    }
+    .index-offset {
+      margin-left: 0;
+    }
+    .index-label {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 12px 0;
+      background: var(--c-bg);
+      border-bottom: 1px solid var(--c-line);
+      top: 0;
+    }
+    .index-rows {
+      border-top: 0;
+    }
+  }
+
+  /* --- Entry rows --- */
+  .entry {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--c-line);
+  }
+  .entry-title {
+    display: block;
+    width: fit-content;
+    font-family: var(--font-serif);
+    font-size: var(--text-md);
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .entry:hover .entry-title,
+  .entry[data-pending] .entry-title {
+    color: var(--c-orange-text);
+  }
+  .entry-lead {
+    position: absolute;
+    left: -20px;
+    top: 21px;
+    width: 16px;
+    height: 16px;
+    color: var(--c-orange);
+    opacity: 0;
+    transition:
+      opacity 0.2s,
+      left 0.2s;
+  }
+  .entry:hover .entry-lead,
+  .entry-lead[data-pending] {
+    opacity: 1;
+    left: -28px;
+  }
+  .entry-lead[data-pending] {
+    width: 20px;
+    height: 20px;
+    top: 19px;
+    left: -32px;
+  }
+  @media (max-width: 599.98px) {
+    .entry:hover .entry-lead {
+      opacity: 0;
+    }
+    .entry:hover .entry-title {
+      color: inherit;
+    }
+    .entry-lead,
+    .entry-lead[data-pending] {
+      left: auto;
+      right: 0;
+    }
+    .entry-lead[data-pending] {
+      opacity: 1;
+      left: auto;
+    }
+    .entry-lead[data-pending] ~ .entry-date {
+      visibility: hidden;
+    }
+  }
+
+  /* --- Scissor loader: the split chevron's arms slide apart and back --- */
+  .scissor path {
+    transform-box: view-box;
+  }
+  .scissor .u {
+    animation: scissor-u 1s cubic-bezier(0.6, 0, 0.2, 1) infinite;
+  }
+  .scissor .l {
+    animation: scissor-l 1s cubic-bezier(0.6, 0, 0.2, 1) infinite 0.12s;
+  }
+  @keyframes scissor-u {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    45% {
+      transform: translate(-4px, -4px);
+    }
+  }
+  @keyframes scissor-l {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    45% {
+      transform: translate(-4px, 4px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scissor * {
+      animation-duration: 2.4s !important;
+    }
+  }
+
+  /* --- Tags / pills --- */
+  .archive-tag {
+    margin-left: 8px;
+    border: 1px solid var(--c-line);
+    border-radius: 3px;
+    padding: 3px 5px;
+    font: 500 10.5px/1 var(--font-sans);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--c-faint);
+    vertical-align: 3px;
+  }
+  @media (max-width: 599.98px) {
+    .archive-tag {
+      display: none;
+    }
+  }
+
+  /* --- External links get the mark's native up-right corner --- */
+  a.ext::after {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 10px;
+    margin-left: 4px;
+    vertical-align: 0.45em;
+    background: currentColor;
+    opacity: 0.8;
+    transform: rotate(-45deg);
+    -webkit-mask: var(--chev) center / contain no-repeat;
+    mask: var(--chev) center / contain no-repeat;
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Prose (rich text from Payload)
+   * ------------------------------------------------------------------ */
+  .prose {
+    font-size: var(--text-base);
+    line-height: 1.75;
+  }
+  .prose > * + * {
+    margin-top: 24px;
+  }
+  .prose p {
+    text-wrap: pretty;
+  }
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin-top: 48px;
+  }
+  .prose h2 {
+    font-size: 24px;
+  }
+  .prose h3 {
+    font-size: var(--text-lg);
+  }
+  .prose h4 {
+    font-size: var(--text-md);
+  }
+  .prose h2 + *,
+  .prose h3 + *,
+  .prose h4 + * {
+    margin-top: 12px;
+  }
+  .prose a {
+    color: var(--c-orange-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .prose strong {
+    font-weight: 600;
+  }
+  .prose code {
+    font: 13.5px var(--font-mono);
+    background: var(--c-soft);
+    border: 1px solid var(--c-line);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .prose pre {
+    font: 13px/1.7 var(--font-mono);
+    background: var(--c-soft);
+    border: 1px solid var(--c-line);
+    border-radius: 6px;
+    padding: 16px 20px;
+    overflow-x: auto;
+  }
+  .prose pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+  .prose figure figcaption {
+    margin-top: 8px;
+    font-size: var(--text-sm);
+    color: var(--c-faint);
+  }
+  .prose ul,
+  .prose ol {
+    padding: 0;
+  }
+  .prose ul {
+    list-style: none;
+  }
+  .prose ol {
+    padding-left: 22px;
+    list-style: decimal;
+  }
+  .prose li {
+    margin-top: 8px;
+    line-height: 1.65;
+  }
+  .prose ul > li {
+    position: relative;
+    padding-left: 22px;
+  }
+  .prose ul > li::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0.62em;
+    width: 6px;
+    height: 10px;
+    background: var(--c-orange);
+    -webkit-mask: var(--chev) center / contain no-repeat;
+    mask: var(--chev) center / contain no-repeat;
+  }
+  .prose blockquote {
+    position: relative;
+    margin: 32px 0;
+    padding-left: 24px;
+    font: 400 var(--text-lg) / 1.45 var(--font-serif);
+    letter-spacing: -0.01em;
+  }
+  .prose blockquote::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0.25em;
+    width: 14px;
+    height: 24px;
+    background: var(--c-orange);
+    -webkit-mask: var(--chev) center / contain no-repeat;
+    mask: var(--chev) center / contain no-repeat;
+  }
+  .prose hr {
+    position: relative;
+    height: 12px;
+    margin: 48px 0;
+    border: 0;
+    background:
+      linear-gradient(var(--c-line), var(--c-line)) left center / calc(50% - 18px) 1px no-repeat,
+      linear-gradient(var(--c-line), var(--c-line)) right center / calc(50% - 18px) 1px no-repeat;
+  }
+  .prose hr::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 7px;
+    height: 12px;
+    margin-left: -3.5px;
+    background: var(--c-orange);
+    transform: rotate(90deg);
+    -webkit-mask: var(--chev) center / contain no-repeat;
+    mask: var(--chev) center / contain no-repeat;
+  }
+  .prose img {
+    border-radius: 6px;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * View transitions (React <ViewTransition> + browser API)
+ * ------------------------------------------------------------------ */
+::view-transition-group(*) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+::view-transition-old(root) {
+  animation: 420ms cubic-bezier(0.4, 0, 1, 1) both vt-out;
+}
+::view-transition-new(root) {
+  animation: 420ms cubic-bezier(0, 0, 0.2, 1) both vt-in;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+/* Titles and dates morph between list and detail. Keep the text crisp
+   instead of scaling a bitmap of it. */
+::view-transition-old(.morph),
+::view-transition-new(.morph) {
+  height: 100%;
+  width: auto;
+  object-fit: none;
+  object-position: left center;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
