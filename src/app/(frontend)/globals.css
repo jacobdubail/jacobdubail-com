@@ -43,6 +43,10 @@
  * faint keeps ~0.2 of headroom over the AA floor on --c-soft rather than
  * sitting exactly on it.
  *
+ * Two light tokens sit close to their floors on --c-soft: --c-faint at
+ * 4.56 against 4.5, and --c-line-strong at 3.06 against 3.0. Darkening
+ * --c-soft again would break both, so move them in the same commit.
+ *
  * Every number in this block is checked by scripts/check-tokens.mjs,
  * which `pnpm lint` and `vercel-build` both run, so drift fails before it
  * ships. Do not hand-edit the ratios — move a value and re-run
@@ -126,6 +130,7 @@
   --text-sm--letter-spacing: 0.005em;
   --text-base: 17px;
   --text-ui: 15px; /* section labels — the one sans step above body-adjacent UI */
+  --text-code: 14px; /* mono runs small against Inter at the same nominal size */
   --text-md: 19px;
   --text-lg: 21px;
   /* The xl floor is 23px, not 21px: a clamp that bottoms out at --text-lg
@@ -720,7 +725,7 @@
   }
   .prose pre {
     position: relative;
-    font: 13.5px/1.7 var(--font-mono);
+    font: var(--text-code) / 1.7 var(--font-mono);
     background: var(--c-soft);
     border: 1px solid var(--c-line-strong);
     border-radius: var(--r-md);

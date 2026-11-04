@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
  */
 export function ArchiveNote({ children }: { children: ReactNode }) {
   return (
-    <aside className="mb-[var(--gap-art-block)] rounded-r-[var(--r-sm)] border-l-2 border-blue bg-soft px-4 py-3.5 text-sm leading-[1.55] text-mute">
+    <aside className="mb-[var(--gap-art-block)] rounded-r-[var(--r-sm)] border-l-2 border-blue bg-soft px-4 py-3.5 text-sm leading-[1.55] text-pretty text-mute">
       {children}
     </aside>
   )

@@ -161,10 +161,11 @@ for (const theme of ['light', 'dark']) {
     const [, a, b] = oklab(h)
     return Math.hypot(a, b)
   }
+  const CHROMA_TOLERANCE = 0.012
   const dC = Math.abs(chroma(t['--c-orange']) - chroma(t['--c-blue']))
-  if (dC > 0.012)
+  if (dC > CHROMA_TOLERANCE)
     failures.push(
-      `${theme} --c-orange and --c-blue differ by ${Math.round(dC * 1000) / 1000} in OKLab chroma — the more saturated word advances`,
+      `${theme} --c-orange and --c-blue differ by ${Math.round(dC * 1000) / 1000} in OKLab chroma (limit ${CHROMA_TOLERANCE}) — the more saturated word advances`,
     )
   // The two hues must also stay far enough apart to read as two hues.
   const sep = deltaE(t['--c-orange'], t['--c-blue'])
@@ -290,6 +291,10 @@ for (const [label, g] of [
 // now only because it was fixed by hand. This is the same treatment the
 // gaps already get.
 const SCALE_ORDER = ['xs', 'sm', 'ui', 'base', 'md', 'lg', 'xl', '2xl', 'display']
+// Off the rank ladder on purpose. --text-code is an optical correction for a
+// different typeface at the same rank as body, not a rank of its own, so the
+// adjacent-step rule does not apply to it. Anything else unlisted is an error.
+const OFF_LADDER = new Set(['code'])
 const scale = {}
 for (const [, name, val] of css.matchAll(/--text-([a-z0-9]+):\s*([^;]+);/g)) {
   if (name.includes('--')) continue // skip --text-sm--letter-spacing and friends
@@ -301,8 +306,13 @@ for (const [, name, val] of css.matchAll(/--text-([a-z0-9]+):\s*([^;]+);/g)) {
 // A step the list does not know about is dropped from every check below,
 // which is the same vacuous pass EXPECTED already closes for colour.
 for (const k of Object.keys(scale))
-  if (!SCALE_ORDER.includes(k))
+  if (!SCALE_ORDER.includes(k) && !OFF_LADDER.has(k))
     failures.push(`--text-${k} is not in SCALE_ORDER — it would skip every scale check`)
+// An off-ladder step still has to stay inside the ladder's range, or it is a
+// rank in disguise.
+for (const k of OFF_LADDER)
+  if (k in scale && (scale[k].min < scale.xs.min || scale[k].max > scale.display.max))
+    failures.push(`--text-${k} sits outside the scale's range`)
 
 const present = SCALE_ORDER.filter((k) => k in scale)
 // Every step must clear the one below it at BOTH ends of its clamp, or two
