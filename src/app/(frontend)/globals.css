@@ -58,10 +58,10 @@
   --c-faint: #6f6a63;
   --c-line: #e6e2db; /* hairline dividers only — decorative */
   --c-line-strong: #8c867f; /* boundaries of objects that carry state */
-  --c-soft: #f2eee6; /* raised surface */
+  --c-soft: #f1ece3; /* raised surface */
   --c-orange: #c44e18; /* marks, large type */
   --c-orange-text: #b34814; /* link text */
-  --c-blue: #1f75e2; /* focus, selection, system notes */
+  --c-blue: #2c77da; /* focus, selection, the archive note's rule — never text */
 
   --c-band: var(--c-orange);
   color-scheme: light;
@@ -79,7 +79,7 @@
   --c-soft: #1e242e;
   --c-orange: #e3672e;
   --c-orange-text: #e8763c;
-  --c-blue: #4791f4;
+  --c-blue: #4791f4; /* also the band: in dark, identity and system share one azure, by choice */
 
   --c-band: var(--c-blue);
   color-scheme: dark;
@@ -110,9 +110,11 @@
 
   /* Type scale. No two steps share a RANK — a step may do several jobs
      (--text-md sets entry titles, h4 and every deck), but no two steps
-     are close enough to be mistaken for each other at any width.
-     xs 12 · sm 13.5 · ui 15 · base 17 · md 19 · lg 20-21 ·
-     xl 23-25 · 2xl 27-30 · display 36-46
+     are close enough to be mistaken for each other at any width —
+     every adjacent pair is at least 1.10x apart at BOTH ends of its
+     clamp, which is asserted rather than asserted-about.
+     xs 12 · sm 13.5 · ui 15 · base 17 · md 19 · lg 21 ·
+     xl 24-26 · 2xl 27-30 · display 36-46
      The clamps all reach their ceiling near 900px, so the scale's
      internal ratios hold across the whole desktop range instead of
      drifting through one band.
@@ -125,10 +127,10 @@
   --text-base: 17px;
   --text-ui: 15px; /* section labels — the one sans step above body-adjacent UI */
   --text-md: 19px;
-  --text-lg: clamp(20px, 2.3vw, 21px);
+  --text-lg: 21px;
   /* The xl floor is 23px, not 21px: a clamp that bottoms out at --text-lg
      would make h2 and h3 identical on every phone and tablet. */
-  --text-xl: clamp(23px, 2.8vw, 25px);
+  --text-xl: clamp(24px, 2.8vw, 26px);
   --text-2xl: clamp(27px, 3.3vw, 30px);
   --text-display: clamp(36px, 5.1vw, 46px);
   --text-display--line-height: 1.1;
@@ -151,14 +153,16 @@
     /* Ranked, and the ranking is asserted by scripts/check-tokens.mjs:
        no two page-level roles share a value, the footer never outranks
        the hero, and the section break stays at least 1.3x the hero break
-       at every width — on mobile too, where it used to collapse. */
+       at every width — on mobile too, where it used to collapse.
+       --gap-top and --gap-bottom are page margin rather than content
+       breaks, so they rank on their own and sit outside that ordering. */
     --gap-top: 56px; /* page top -> nav */
-    --gap-chrome: 72px; /* nav -> content */
-    --gap-hero: 88px; /* hero -> first index */
+    --gap-chrome: 64px; /* nav -> content */
+    --gap-hero: 80px; /* hero -> first index */
     --gap-lead: 60px; /* page header -> a stack of like sections */
     --gap-group: 68px; /* like section -> like section */
-    --gap-section: 124px; /* unlike section -> unlike section — the largest break on the page */
-    --gap-footer: 80px; /* content -> footer */
+    --gap-section: 112px; /* unlike section -> unlike section — the largest break on the page */
+    --gap-footer: 72px; /* content -> footer */
     --gap-bottom: 96px; /* footer -> page bottom — page margin, not a content break */
 
     /* Inside an article, descending: back link, header blocks, body. */
@@ -232,17 +236,13 @@
   h3 {
     text-wrap: balance;
   }
-  /* Balance optimises for equal line lengths, which at 390px turns the
-     hero into a long / short / long stack. Below the breakpoint a plain
-     descending rag reads as set rather than as an artifact. (Neither
-     mode can land both accent words at line ends at this measure — the
-     sentence is too long for the column; this is the better of the
-     available breaks, not a fix for that.) */
-  @media (max-width: 599.98px) {
-    .page-header h1 {
-      text-wrap: pretty;
-    }
-  }
+  /* The hero keeps `balance`. On its own, balance put both accent words
+     at the start of a line at 390px; the fix was binding each accent to
+     the word before it in Headline.tsx, not changing the wrap mode.
+     With the phrases bound, balance gives
+       I build / engineering teams / and the systems / they run on.
+     and every coloured word closes a line. `pretty` strands "run on."
+     on its own, so it is the wrong mode here. */
 }
 
 /* ------------------------------------------------------------------ *
@@ -712,6 +712,7 @@
   .prose code {
     font-family: var(--font-mono);
     font-size: 0.9em;
+    overflow-wrap: anywhere;
     background: var(--c-soft);
     border: 1px solid var(--c-line-strong);
     padding: 1px 5px;
@@ -748,6 +749,14 @@
     border-left: 1px solid var(--c-line-strong);
     border-bottom: 1px solid var(--c-line-strong);
     border-radius: 0 var(--r-md) 0 var(--r-sm);
+  }
+  @media (max-width: 599.98px) {
+    /* At 390px a 24-character token in a bordered box forces breaks on both
+       sides of itself and reads heavier than the sentence around it. The
+       fill alone still marks it as code. */
+    .prose :not(pre) > code {
+      border-color: transparent;
+    }
   }
   .prose pre code {
     background: none;
@@ -797,8 +806,12 @@
   }
   /* The pull quote is the one place the mark earns the accent: it is
      rare, it is the author's voice, and it is a deliberate interruption. */
+  /* Capped by measure, not only by size: at 390px the clamp floor gives a
+     quote the same relative size it has at 720px, so it gained mass as the
+     column halved and out-weighed the title of the piece. */
   .prose blockquote {
     position: relative;
+    max-width: 24em;
     padding-left: 30px;
     font-family: var(--font-serif);
     font-size: var(--text-2xl);

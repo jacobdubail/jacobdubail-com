@@ -92,13 +92,6 @@ async function Project({ params }: Pick<PageProps<'/projects/[slug]'>, 'params'>
         </p>
       ) : null}
 
-      {project.archived ? (
-        <ArchiveNote>
-          <b className="font-medium text-fg">Archive project.</b> Client work from my consulting
-          years. The live site may have changed since launch.
-        </ArchiveNote>
-      ) : null}
-
       {cover?.url ? (
         <Image
           src={cover.url}
@@ -122,6 +115,12 @@ async function Project({ params }: Pick<PageProps<'/projects/[slug]'>, 'params'>
         </dl>
       ) : null}
 
+      {project.archived ? (
+        <ArchiveNote>
+          <b className="font-medium text-fg">Archive project.</b> Client work from my consulting
+          years. The live site may have changed since launch.
+        </ArchiveNote>
+      ) : null}
       <RichText data={project.content} />
     </>
   )

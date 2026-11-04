@@ -97,16 +97,15 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
         <div className="mb-[var(--gap-art-block)]" />
       )}
 
-      {post.archived ? (
-        <ArchiveNote>
-          <b className="font-medium text-fg">From the archive.</b> Originally published{' '}
-          {longDate(post.publishedAt, true)} on the previous version of this site. Some details may
-          be dated.
-        </ArchiveNote>
-      ) : null}
-
       {post.excerpt ? (
         <p className="mb-[var(--gap-art-body)] text-md leading-[1.55] text-ink2">{post.excerpt}</p>
+      ) : null}
+
+      {post.archived ? (
+        <ArchiveNote>
+          <b className="font-medium text-fg">From the archive.</b> Published on the previous version
+          of this site; some details may be dated.
+        </ArchiveNote>
       ) : null}
       <RichText data={post.content} />
 
@@ -133,7 +132,9 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
           {newer ? (
             <Link
               href={`/writing/${newer.slug}`}
-              className="flex flex-col items-end gap-1 text-right hover:text-orange-text max-sm:items-start max-sm:text-left"
+              className={`flex flex-col gap-1 hover:text-orange-text ${
+                older ? 'items-end text-right max-sm:items-start max-sm:text-left' : 'items-start'
+              }`}
             >
               <small className="inline-flex items-center gap-1.5 text-sm text-mute">
                 Next <GappedArrow className="w-3.5 text-orange" />

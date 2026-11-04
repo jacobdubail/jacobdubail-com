@@ -16,7 +16,6 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start -p 3005",
     "lint": "node scripts/check-tokens.mjs && eslint .",
     "check:tokens": "node scripts/check-tokens.mjs",
-    "check:tokens": "node scripts/check-tokens.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
