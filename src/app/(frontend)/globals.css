@@ -6,78 +6,82 @@
 /* ------------------------------------------------------------------ *
  * Design tokens
  *
- * Colour roles — two accents inside the content, and one pair that sits
- * outside the grammar on purpose:
+ * Colour roles. The palette is two hues and no more:
  *   tangerine (--c-orange / --c-orange-text) = you can act on this.
  *     Links, the active nav item, hover and motion marks.
  *   azure (--c-blue) = the system is talking back.
  *     Focus ring, selection, the archive note's rule.
- *   --c-head-a / --c-head-b = identity, not semantics.
- *     The headline's two accent words, and the band — which is the site
- *     announcing itself before any content loads. These are a declared
- *     exception rather than a leak: the band therefore always draws from
- *     the identity pair and never from the two functional accents, and
- *     the pair is tuned to equal contrast so the headline has no winning
- *     word. --c-head-b is held clear of --c-orange-text so an accent
- *     word is not mistakable for a link.
  * Decorative marks (list bullets, rules, separators) are neutral at rest
  * and only take an accent when they signal state.
+ *
+ * Two places use the hues as identity rather than as meaning: the band,
+ * which is the site announcing itself before any content loads, and the
+ * headline's two accent words. An earlier revision gave those a separate
+ * --c-head-* pair so they would not drag the functional accents off
+ * their jobs. That pair could not be told apart from the tokens it was
+ * meant to differ from (ΔE 0.009 from --c-blue in dark), and a palette
+ * cannot support five accents across two hues. So the hues are used
+ * directly, and the thing that was actually wanted — a headline with no
+ * winning word — is bought by tuning --c-orange and --c-blue to the same
+ * OKLab lightness instead. Context, not colour, is what keeps a 46px
+ * serif accent word from reading as a 17px underlined link.
  *
  * Neutrals are one warm family in light and one cool family in dark.
  *
  * Contrast contract, in two tiers:
  *   Every token set at body size clears 4.5:1 on BOTH --c-bg and
  *   --c-soft, so any such token is safe on any surface.
- *   --c-orange, --c-head-a and --c-head-b are large-type and mark-only
- *   and are held to the 3:1 non-text floor instead. --c-line-strong is
+ *   --c-orange and --c-blue are mark, display and focus-ring colours,
+ *   never body text, and are held to the 3:1 non-text floor instead. --c-line-strong is
  *   an object boundary and is also held to 3:1 on both surfaces.
  *
- * One deliberate asymmetry: light's ink2/mute/faint sit 1.92x / 2.89x /
- * 3.25x below fg, and dark's sit 1.91x / 2.40x / 2.80x. Matching them
+ * One deliberate asymmetry: light's ink2/mute/faint sit 1.92x / 3.02x /
+ * 3.40x below fg, and dark's sit 1.91x / 2.40x / 2.69x. Matching them
  * exactly would put dark --c-faint below the AA floor on --c-soft. Dark
  * has less room beneath its foreground before that floor, so the ramp is
- * compressed rather than the floor broken. ink2 matches exactly; faint
- * now sits at the darkest value AA still permits on both surfaces.
+ * compressed rather than the floor broken. ink2 matches to 0.01x, and
+ * faint keeps ~0.2 of headroom over the AA floor on --c-soft rather than
+ * sitting exactly on it.
  *
  * Every number in this block is checked by scripts/check-tokens.mjs,
- * which fails the build on drift. Do not hand-edit the ratios — move a
- * value and re-run `pnpm check:tokens --print`.
+ * which `pnpm lint` and `vercel-build` both run, so drift fails before it
+ * ships. Do not hand-edit the ratios — move a value and re-run
+ * `pnpm check:tokens --print`. The guard reads the figures out of this
+ * comment, so the sentences above are the thing under test.
  * ------------------------------------------------------------------ */
+/* @tokens light */
 :root {
   --c-bg: #fdfcfa;
   --c-fg: #17150f;
   --c-ink2: #4a453d;
-  --c-mute: #645f58;
-  --c-faint: #6b6760;
+  --c-mute: #67625b;
+  --c-faint: #6f6a63;
   --c-line: #e6e2db; /* hairline dividers only — decorative */
-  --c-line-strong: #88827a; /* boundaries of objects that carry state */
-  --c-soft: #eee8de; /* raised surface */
+  --c-line-strong: #8c867f; /* boundaries of objects that carry state */
+  --c-soft: #f2eee6; /* raised surface */
   --c-orange: #c44e18; /* marks, large type */
-  --c-orange-text: #ad4613; /* link text */
-  --c-blue: #1a66c7; /* focus, selection, system notes */
-  --c-head-a: #1c6dd4; /* identity — headline, band */
-  --c-head-b: #cb3c19;
+  --c-orange-text: #b34814; /* link text */
+  --c-blue: #1f75e2; /* focus, selection, system notes */
 
-  --c-band: var(--c-head-b);
+  --c-band: var(--c-orange);
   color-scheme: light;
 }
 
+/* @tokens dark */
 .dark {
   --c-bg: #101318;
   --c-fg: #e5e8ee; /* eased off pure white so 46px serif does not halate */
   --c-ink2: #a2aab6;
   --c-mute: #9097a3;
-  --c-faint: #848b96;
+  --c-faint: #878e9a;
   --c-line: #232832;
   --c-line-strong: #65707e;
   --c-soft: #1e242e;
   --c-orange: #e3672e;
   --c-orange-text: #e8763c;
-  --c-blue: #5c9df5;
-  --c-head-a: #5a9bf4;
-  --c-head-b: #ea7a5f;
+  --c-blue: #4791f4;
 
-  --c-band: var(--c-head-a);
+  --c-band: var(--c-blue);
   color-scheme: dark;
 }
 
@@ -104,9 +108,14 @@
   /* 4px spacing grid: p-4 = 16px, mt-16 = 64px, mt-24 = 96px */
   --spacing: 4px;
 
-  /* Type scale. Every step has one job; no two steps share a role.
-     xs 12 · sm 13.5 · ui 15 · base 17 · md 19 · lg 21 ·
-     xl 23-25 · 2xl 26-30 · display 35-46
+  /* Type scale. No two steps share a RANK — a step may do several jobs
+     (--text-md sets entry titles, h4 and every deck), but no two steps
+     are close enough to be mistaken for each other at any width.
+     xs 12 · sm 13.5 · ui 15 · base 17 · md 19 · lg 20-21 ·
+     xl 23-25 · 2xl 27-30 · display 36-46
+     The clamps all reach their ceiling near 900px, so the scale's
+     internal ratios hold across the whole desktop range instead of
+     drifting through one band.
      Inter is drawn for ~16px up, so the two small steps get a touch of
      tracking back to hold their colour at caption sizes. */
   --text-xs: 12px;
@@ -116,12 +125,12 @@
   --text-base: 17px;
   --text-ui: 15px; /* section labels — the one sans step above body-adjacent UI */
   --text-md: 19px;
-  --text-lg: 21px;
+  --text-lg: clamp(20px, 2.3vw, 21px);
   /* The xl floor is 23px, not 21px: a clamp that bottoms out at --text-lg
      would make h2 and h3 identical on every phone and tablet. */
-  --text-xl: clamp(23px, 2.6vw, 25px);
-  --text-2xl: clamp(26px, 3.4vw, 30px);
-  --text-display: clamp(35px, 6.6vw, 46px);
+  --text-xl: clamp(23px, 2.8vw, 25px);
+  --text-2xl: clamp(27px, 3.3vw, 30px);
+  --text-display: clamp(36px, 5.1vw, 46px);
   --text-display--line-height: 1.1;
 
   --breakpoint-sm: 600px;
@@ -139,14 +148,18 @@
     /* --- Ranked vertical breaks. The gap between two sibling lists is
        the largest break on the page, because it is the largest idea
        change on the page. Page chrome gets less. --- */
+    /* Ranked, and the ranking is asserted by scripts/check-tokens.mjs:
+       no two page-level roles share a value, the footer never outranks
+       the hero, and the section break stays at least 1.3x the hero break
+       at every width — on mobile too, where it used to collapse. */
     --gap-top: 56px; /* page top -> nav */
-    --gap-chrome: 80px; /* nav -> content */
-    --gap-hero: 80px; /* hero -> first index */
-    --gap-lead: 64px; /* page header -> a stack of like sections */
-    --gap-group: 72px; /* like section -> like section */
-    --gap-section: 112px; /* unlike section -> unlike section — 1.4x the hero break, so the ranking is readable */
-    --gap-footer: 88px; /* content -> footer */
-    --gap-bottom: 80px; /* footer -> page bottom */
+    --gap-chrome: 72px; /* nav -> content */
+    --gap-hero: 88px; /* hero -> first index */
+    --gap-lead: 60px; /* page header -> a stack of like sections */
+    --gap-group: 68px; /* like section -> like section */
+    --gap-section: 124px; /* unlike section -> unlike section — the largest break on the page */
+    --gap-footer: 80px; /* content -> footer */
+    --gap-bottom: 96px; /* footer -> page bottom — page margin, not a content break */
 
     /* Inside an article, descending: back link, header blocks, body. */
     --gap-art-lead: 48px; /* back link -> header */
@@ -171,13 +184,13 @@
   @media (max-width: 599.98px) {
     :root {
       --gap-top: 44px;
-      --gap-chrome: 56px;
+      --gap-chrome: 52px;
       --gap-hero: 64px;
-      --gap-lead: 48px;
-      --gap-group: 56px;
-      --gap-section: 80px;
-      --gap-footer: 64px;
-      --gap-bottom: 56px;
+      --gap-lead: 44px;
+      --gap-group: 52px;
+      --gap-section: 88px;
+      --gap-footer: 56px;
+      --gap-bottom: 72px;
       --gap-art-lead: 36px;
       --gap-art-body: 32px;
       --gap-art-block: 24px;
@@ -219,6 +232,17 @@
   h3 {
     text-wrap: balance;
   }
+  /* Balance optimises for equal line lengths, which at 390px turns the
+     hero into a long / short / long stack. Below the breakpoint a plain
+     descending rag reads as set rather than as an artifact. (Neither
+     mode can land both accent words at line ends at this measure — the
+     sentence is too long for the column; this is the better of the
+     available breaks, not a fix for that.) */
+  @media (max-width: 599.98px) {
+    .page-header h1 {
+      text-wrap: pretty;
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -239,13 +263,13 @@
     mask: var(--chev) center / contain no-repeat;
   }
 
-  /* The identity pair is applied from here rather than exposed as a
-     Tailwind colour, so it cannot end up on a 12px label. */
+  /* Applied from here rather than exposed as Tailwind colours, so display
+     use of the accents cannot quietly end up on a 12px label. */
   .headline-a {
-    color: var(--c-head-a);
+    color: var(--c-blue);
   }
   .headline-b {
-    color: var(--c-head-b);
+    color: var(--c-orange);
   }
 
   /* Band across the top of every page */
@@ -294,16 +318,14 @@
     grid-column: 2;
     min-width: 0;
   }
+  /* A hanging label, not a sticky one. An index label tracks because its
+     list stays on screen and the heading keeps earning its place; a
+     publication date is a one-time fact, and following the reader down
+     three thousand pixels of empty margin is persistence without a job. */
   .article-meta {
-    position: sticky;
-    top: var(--stick);
     align-self: start;
     grid-column: 1;
-    /* Spans the implicit rows so its sticky containing block is the whole
-       article rather than the one row the h1 occupies — otherwise it
-       travels ~40px and scrolls away. `-1` resolves against the explicit
-       grid, which has no rows here, so the span is counted instead. */
-    grid-row: 2 / span 50;
+    grid-row: 2;
     padding-top: 2px;
     text-align: right;
   }
@@ -317,10 +339,12 @@
     .article {
       display: block;
     }
+    /* The column's right edge only exists while the column does. Below
+       the breakpoint there is no gutter to hang against, so the meta
+       rejoins the flow and aligns left like everything else. */
     .article-meta {
-      position: static;
       text-align: left;
-      margin-bottom: 10px;
+      margin-bottom: var(--gap-art-tight);
     }
     .article > .spans {
       padding-left: 0;
@@ -631,7 +655,8 @@
    * ------------------------------------------------------------------ */
   /* No max-width here: inside .article and .index-offset the measure is
      already decided by the grid's gutter arithmetic (736 - 144 = 592px,
-     about 68 characters at 17px). One thing should set the measure. */
+     which measures 66 characters at 17px Inter). One thing should set
+     the measure. */
   .prose {
     font-size: var(--text-base);
     line-height: 1.7;

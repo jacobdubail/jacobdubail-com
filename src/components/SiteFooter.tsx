@@ -25,9 +25,7 @@ export async function SiteFooter() {
           <span className="inline-flex items-center">
             {links.map((l, i) => (
               <Fragment key={l.id ?? l.url}>
-                {i > 0 ? (
-                  <span className="chev mx-2.5 h-[9px] w-[5px] text-line-strong" aria-hidden />
-                ) : null}
+                {i > 0 ? <span className="chev mx-2.5 text-line-strong" aria-hidden /> : null}
                 <a href={l.url} className="tap hover:text-orange-text" rel="me">
                   {l.label}
                 </a>

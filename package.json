@@ -14,7 +14,8 @@
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev -p 3005",
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start -p 3005",
-    "lint": "eslint .",
+    "lint": "node scripts/check-tokens.mjs && eslint .",
+    "check:tokens": "node scripts/check-tokens.mjs",
     "check:tokens": "node scripts/check-tokens.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
@@ -27,7 +28,7 @@
     "seed:demo": "cross-env NODE_OPTIONS=--no-deprecation SEED_DEMO=true payload run src/seed/run.ts",
     "import:wordpress": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/import-wordpress.ts",
     "db:up": "docker compose up -d postgres",
-    "vercel-build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" payload migrate && pnpm build"
+    "vercel-build": "node scripts/check-tokens.mjs && cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" payload migrate && pnpm build"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.91.0",

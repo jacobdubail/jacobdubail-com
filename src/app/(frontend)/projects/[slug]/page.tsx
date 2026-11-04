@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { ViewTransition } from 'react'
 
 import { GappedArrow } from '@/components/icons'
+import { ArchiveNote } from '@/components/ArchiveNote'
 import { RichText } from '@/components/RichText'
 import { getProject, getProjects } from '@/lib/queries'
 
@@ -86,14 +87,16 @@ async function Project({ params }: Pick<PageProps<'/projects/[slug]'>, 'params'>
         </h1>
       </ViewTransition>
       {project.summary ? (
-        <p className="mb-7 max-w-[36em] text-md leading-[1.55] text-mute">{project.summary}</p>
+        <p className="mb-[var(--gap-art-body)] text-md leading-[1.55] text-ink2">
+          {project.summary}
+        </p>
       ) : null}
 
       {project.archived ? (
-        <aside className="mb-8 border-l-2 border-blue bg-soft px-4 py-3 text-sm leading-[1.55] text-mute">
+        <ArchiveNote>
           <b className="font-medium text-fg">Archive project.</b> Client work from my consulting
           years. The live site may have changed since launch.
-        </aside>
+        </ArchiveNote>
       ) : null}
 
       {cover?.url ? (

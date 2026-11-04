@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ViewTransition } from 'react'
 
+import { ArchiveNote } from '@/components/ArchiveNote'
 import { GappedArrow } from '@/components/icons'
 import { RichText } from '@/components/RichText'
 import { longDate, readingTime } from '@/lib/format'
@@ -97,11 +98,11 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
       )}
 
       {post.archived ? (
-        <aside className="mb-[var(--gap-art-block)] rounded-r-[var(--r-sm)] border-l-2 border-blue bg-soft px-4 py-3.5 text-sm leading-[1.55] text-mute">
+        <ArchiveNote>
           <b className="font-medium text-fg">From the archive.</b> Originally published{' '}
           {longDate(post.publishedAt, true)} on the previous version of this site. Some details may
           be dated.
-        </aside>
+        </ArchiveNote>
       ) : null}
 
       {post.excerpt ? (
