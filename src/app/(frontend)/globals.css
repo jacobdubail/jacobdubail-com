@@ -16,7 +16,10 @@
  *
  * Two places use the hues as identity rather than as meaning: the band,
  * which is the site announcing itself before any content loads, and the
- * headline's two accent words. An earlier revision gave those a separate
+ * headline's two accent words. Both now carry the pair rather than one
+ * hue each, and in the same order — azure, then tangerine — so the
+ * band reads as the headline's own stripe. The index label's split
+ * chevron carries it a third time, at mark size. An earlier revision gave those a separate
  * --c-head-* pair so they would not drag the functional accents off
  * their jobs. That pair could not be told apart from the tokens it was
  * meant to differ from (ΔE 0.009 from --c-blue in dark), and a palette
@@ -67,7 +70,6 @@
   --c-orange-text: #b34814; /* link text */
   --c-blue: #2c77da; /* focus, selection, the archive note's rule — never text */
 
-  --c-band: var(--c-orange);
   color-scheme: light;
 }
 
@@ -83,11 +85,10 @@
   --c-soft: #1e242e;
   --c-orange: #e3672e;
   --c-orange-text: #e8763c;
-  --c-blue: #4791f4; /* in dark this one token is the band, the headline's
-     azure word, the focus ring and the selection wash — four roles, one
-     colour, by choice rather than by collision */
+  --c-blue: #4791f4; /* the band's left end, the headline's azure word,
+     the focus ring and the selection wash — four roles, one colour, by
+     choice rather than by collision */
 
-  --c-band: var(--c-blue);
   color-scheme: dark;
 }
 
@@ -103,7 +104,6 @@
   --color-orange: var(--c-orange);
   --color-orange-text: var(--c-orange-text);
   --color-blue: var(--c-blue);
-  --color-band: var(--c-band);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, serif;
@@ -150,9 +150,13 @@
 @layer theme {
   :root {
     /* --- Margin-index grid. One source for the gutter. --- */
-    --label-w: 120px;
-    --label-gap: 24px;
+    --label-w: 112px;
+    --label-gap: 32px;
     --gutter: calc(var(--label-w) + var(--label-gap)); /* 144px */
+    /* The gap is the channel the row's hover arrow hangs in, so it is
+       sized by that arrow (16px) plus clearance on both sides, not by
+       taste. The label column gives up the 8px, so --gutter does not
+       move and nothing downstream re-flows. */
 
     /* --- Ranked vertical breaks. The gap between two sibling lists is
        the largest break on the page, because it is the largest idea
@@ -259,6 +263,11 @@
 @layer components {
   :root {
     --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.5 3.75 14.15 24.5'%3E%3Cpath d='M25.40 14.40L15.00 4.00L11.75 7.25L18.89 14.40ZM25.40 17.60L15.00 28.00L11.75 24.75L18.89 17.60Z'/%3E%3C/svg%3E");
+    /* The same arrow icons.tsx draws, as a mask, for the one place that
+       needs it from CSS. Two copies of one shape is exactly the drift
+       this file spends its time preventing, so check-tokens.mjs holds
+       both masks equal to the path constants the components export. */
+    --arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2.00 13.70L17.59 13.70L17.59 18.30L6.60 18.30ZM29.00 16.00L18.00 5.00L14.75 8.25L22.49 16.00L14.75 23.75L18.00 27.00Z'/%3E%3C/svg%3E");
   }
   .chev {
     display: inline-block;
@@ -279,12 +288,25 @@
     color: var(--c-orange);
   }
 
-  /* Band across the top of every page */
+  /* Band across the top of every page. It used to be one hue, and a
+     different one in each theme — tangerine in light, azure in dark —
+     so the pair that defines the headline never appeared together
+     anywhere else. Now the band runs the same pair in the same order
+     the headline reads them: azure first, tangerine last.
+     It meets at a hard stop rather than a ramp. A ramp was tried, in
+     OKLab, and it is unfixable by construction: --c-orange and
+     --c-blue are tuned to the SAME OKLab lightness so that neither
+     headline word wins, and two near-opposite hues at equal lightness
+     interpolate through near-neutral. Measured, the midpoint fell to
+     31% of the lower endpoint's chroma and more than half the band's
+     width sat under 60% — a desaturated mauve, which is a third hue,
+     at the widest element on every page. No interpolation space fixes
+     that. The answer is not to interpolate. */
   .band {
     position: absolute;
     inset: 0 0 auto;
     height: 4px;
-    background: var(--c-band);
+    background: linear-gradient(90deg, var(--c-blue) 0 50%, var(--c-orange) 50%);
   }
 
   /* Any control whose visual size is smaller than its hit area should
@@ -310,6 +332,31 @@
      from sitting right of the page's own centre. --- */
   .page-header + .index-section {
     margin-top: var(--gap-hero);
+  }
+  /* The title's optional gutter mark — a portrait on About. It hangs in
+     the same column an index label and an article's date occupy, so the
+     h1 keeps the single left edge every other h1 on the site starts
+     from. In the flow instead, an 80px image would push the title 144px
+     right of the nav and the footer. */
+  .page-header-marked {
+    display: grid;
+    grid-template-columns: var(--label-w) minmax(0, 1fr);
+    column-gap: var(--label-gap);
+  }
+  .page-mark {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 8px;
+  }
+  @media (max-width: 719.98px) {
+    /* No gutter below 720px, so the mark stacks rather than hangs. */
+    .page-header-marked {
+      grid-template-columns: 1fr;
+      row-gap: 18px;
+    }
+    .page-mark {
+      justify-content: flex-start;
+    }
   }
   /* The article uses the same grid as an index, so every h1 on the site
      starts on the same left edge — which is what keeps the shared-element
@@ -359,13 +406,18 @@
   }
 
   /* --- Margin index: label column + list column --- */
+  /* The default break is the largest one, and the rules below narrow
+     it. It is not 0, because 0 is what shipped on About: a section that
+     followed a prose block instead of a page header matched no
+     adjacency rule at all and sat welded to the paragraph above it. A
+     missing rule should cost too much space rather than none. Every
+     page opens with a .page-header, so no index section is ever first
+     in <main> and inherits this default against the nav. */
   .index-section {
     display: grid;
     grid-template-columns: var(--label-w) 1fr;
     column-gap: var(--label-gap);
-  }
-  .index-section + .index-section {
-    margin-top: var(--gap-section);
+    margin-top: var(--gap-section); /* unlike section -> unlike section */
   }
   /* Sibling lists of the same kind are one idea, not two. */
   .index-section.is-group + .index-section.is-group {
@@ -399,30 +451,35 @@
     letter-spacing: 0.015em;
     color: var(--c-fg);
   }
-  /* Neutral at rest. The chevron only takes the accent when the section
-     is being pointed at — that is what makes the accent mean something. */
+  /* The label's chevron used to light up whenever the pointer entered
+     the section. The h2 is not a link, so the only thing a pointer in
+     this section can act on is a row — lighting the label as well meant
+     one pointer lit two things. On the FIRST row it lit them in the
+     same six pixels: the label's chevron and the row's hanging arrow
+     overlapped on both axes and welded into one unreadable orange
+     blob. So the row keeps the accent, and the mark holds still —
+     neutral, like every other decorative mark in this file.
+     It briefly carried the two headline hues instead. That was wrong
+     twice over: it put an accent on a mark that signals nothing, which
+     is the one thing the colour contract at the top of this file
+     forbids, and it repeats two to four times a page, which is a tic
+     rather than an identity. The pair lives where it is earned — see
+     .band and .scissor. */
   .index-label > .name .chev {
-    color: var(--c-line-strong);
-    transition:
-      transform 0.25s,
-      color 0.25s;
-  }
-  .index-section:hover .index-label > .name .chev,
-  .index-section:focus-within .index-label > .name .chev {
-    color: var(--c-orange);
-    transform: translateX(3px);
-  }
-  /* Hover never fires on touch, so a rest-state grey tick would sit
-     there permanently signalling nothing. Give it the accent instead. */
-  @media (hover: none) {
-    .index-label > .name .chev {
-      color: var(--c-orange);
-    }
+    background: var(--c-line-strong);
   }
   /* Lighter than the label it sits under, but the underline is solid
      enough to read as a link without hovering. */
+  /* 13.5px of text is a 17px box, and a 17px box is not a touch target.
+     The padding buys the 24px floor; the matching negative margin means
+     nothing on screen moves to pay for it. */
   .index-aside {
     width: fit-content;
+    display: inline-flex;
+    padding-block: 6px;
+    padding-inline: 8px;
+    margin-block: -6px;
+    margin-inline: -8px;
     font-size: var(--text-sm);
     color: var(--c-faint);
     text-decoration: underline;
@@ -455,10 +512,12 @@
       text-align: left;
       padding: 10px 0;
       top: 0;
-      /* A sticky layer needs to read as a layer. The 1.26:1 hairline
-         alone cannot do that, so it gets a wash and a blur. */
-      background: color-mix(in srgb, var(--c-bg) 86%, transparent);
-      backdrop-filter: blur(8px);
+      /* Opaque, not a wash. At 86% with an 8px blur a 19px Fraunces
+         title read straight through the bar: its top half ghosted
+         behind the label while its descenders came out below the rule.
+         Blur does not defeat 17.8:1. The hairline is what makes this a
+         layer; the translucency only made it a veil. */
+      background: var(--c-bg);
       border-bottom: 1px solid var(--c-line);
     }
     .index-rows {
@@ -505,7 +564,7 @@
   }
   .entry-lead {
     position: absolute;
-    left: -20px;
+    left: -18px;
     top: 19px;
     width: 16px;
     height: 16px;
@@ -521,13 +580,16 @@
   .entry:focus-visible .entry-lead,
   .entry-lead[data-pending] {
     opacity: 1;
-    left: -28px;
+    /* Centred in the 32px channel, not merely inside it: 8px of air on
+       the label's side and 8px before the title. The pending mark is
+       4px wider, so it sits 2px further out to stay centred too. */
+    left: -24px;
   }
   .entry-lead[data-pending] {
     width: 20px;
     height: 20px;
     top: 17px;
-    left: -32px;
+    left: -26px;
   }
   /* The hanging lead needs room outside the column; below that it has
      nowhere to go, so it is retired rather than clipped. */
@@ -574,9 +636,22 @@
     }
   }
 
-  /* --- Scissor loader: the split chevron's arms slide apart and back --- */
+  /* --- Scissor loader: the split chevron's arms slide apart and back ---
+     This is the one place on the site where both meanings are true at
+     once: you have acted (tangerine) and the system is answering
+     (azure). So it is where the headline's pair is earned rather than
+     applied, and the mask's own gap keeps the two hues from meeting.
+     It also shows at most once at a time, which is what an identity
+     mark should do — the index label's chevron was reverted to neutral
+     precisely because it repeated. */
   .scissor path {
     transform-box: view-box;
+  }
+  .scissor .u {
+    fill: var(--c-blue);
+  }
+  .scissor .l {
+    fill: var(--c-orange);
   }
   .scissor .u {
     animation: scissor-u 1s cubic-bezier(0.6, 0, 0.2, 1) infinite;
@@ -626,6 +701,19 @@
     letter-spacing: 0.01em;
     color: var(--c-mute);
   }
+  /* A chip is 23.4px tall, 0.6px under the 24px target floor, and it
+     cannot pad its way up there: a chip has a fill, so padding grows
+     the shape and breaks the one-size rule above. .tap is the wrong
+     tool for the same reason. A transparent overlay buys the target
+     without moving a pixel of what you see. */
+  .chip-tap {
+    position: relative;
+  }
+  .chip-tap::after {
+    content: '';
+    position: absolute;
+    inset: -5px -2px;
+  }
   .chip-state {
     background: none;
     border-color: var(--c-line-strong);
@@ -643,18 +731,24 @@
     }
   }
 
-  /* --- External links get the mark's native up-right corner --- */
+  /* --- External links point out of the page ---
+     This used to be the split chevron, rotated. Leaving somewhere is
+     navigation, and the rule this file keeps everywhere else is that
+     the arrow is navigation and the chevron is a mark — so the chevron
+     was the wrong shape here on the project's own terms. It also could
+     not carry the job at 6x10: rotated, a chevron reads as a stray
+     apostrophe after the last word rather than as a direction. */
   a.ext::after {
     content: '';
     display: inline-block;
-    width: var(--chev-sm-w);
-    height: var(--chev-sm-h);
-    margin-left: 5px;
-    vertical-align: 0.4em;
+    width: 11px;
+    height: 11px;
+    margin-left: 4px;
+    vertical-align: 0.02em;
     background: currentColor;
     transform: rotate(-45deg);
-    -webkit-mask: var(--chev) center / contain no-repeat;
-    mask: var(--chev) center / contain no-repeat;
+    -webkit-mask: var(--arrow) center / contain no-repeat;
+    mask: var(--arrow) center / contain no-repeat;
   }
 
   /* ------------------------------------------------------------------ *
@@ -673,6 +767,17 @@
   }
   .prose p {
     text-wrap: pretty;
+  }
+  /* A lead paragraph rendered outside the rich text — About's opening
+     sentence lives in its own CMS field — still belongs to the rich
+     text's rhythm. Same measure, same leading, same break. Set 4px or
+     0.1 of leading away from it and the page has two paragraph streams
+     that almost line up, which reads worse than an obvious difference.
+     scripts/check-tokens.mjs holds the two line-heights equal. */
+  .prose-lead {
+    line-height: 1.7;
+    text-wrap: pretty;
+    margin-bottom: 24px;
   }
   .prose h2,
   .prose h3,

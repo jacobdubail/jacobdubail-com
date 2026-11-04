@@ -59,6 +59,14 @@ const ratio = (a, b) => {
 const r2 = (n) => Math.round(n * 100) / 100
 
 const failures = []
+const walkTsx = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory()
+      ? walkTsx(join(dir, e.name))
+      : e.name.endsWith('.tsx')
+        ? [join(dir, e.name)]
+        : [],
+  )
 const css = readFileSync(CSS, 'utf8')
 // Comment text with the block-comment asterisks and wrapping removed, so a
 // Prettier reflow cannot break a check that is about the design.
@@ -440,6 +448,120 @@ for (const [, selector, body] of css.matchAll(/([^\n{}]+)\{([^{}]*)\}/g)) {
     )
 }
 
+// --- One shape, one source ------------------------------------------------
+// The chevron and the arrow each exist twice: as an SVG path a component
+// draws, and as a CSS mask. Two copies of one shape is the drift this file
+// spends its time preventing, so the copies are held equal.
+{
+  const icons = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '../src/components/icons.tsx'),
+    'utf8',
+  )
+  const konst = (name) => (icons.match(new RegExp(`${name}\\s*=\\s*\\n?\\s*'([^']+)'`)) || [])[1]
+  const mask = (name) => (css.match(new RegExp(`--${name}:[^;]*d='([^']+)'`)) || [])[1]
+  const pairs = [
+    ['chev', [konst('CHEV_UPPER'), konst('CHEV_LOWER')].join('')],
+    ['arrow', konst('ARROW_PATH')],
+  ]
+  for (const [name, fromTsx] of pairs) {
+    const fromCss = mask(name)
+    if (!fromTsx || !fromCss)
+      failures.push(`could not read both copies of the ${name} path to compare them`)
+    else if (fromTsx !== fromCss)
+      failures.push(
+        `--${name}'s mask and the path icons.tsx draws have diverged — one shape, one source`,
+      )
+  }
+}
+
+// --- Every class a component emits has a rule ----------------------------
+// PageHeader shipped .page-header-marked and .page-mark with no CSS behind
+// them at all. Nothing rendered them at the time, so nothing caught it; the
+// first uploaded portrait would have dropped an unstyled block in and
+// shifted the h1 144px off the one left edge the layout is built on.
+{
+  const OURS =
+    /^(page|index|entry|chip|prose|chev|tap|ext|band|article|scissor|headline|spans|name)(-|$)/
+  const srcRoot = join(dirname(fileURLToPath(import.meta.url)), '../src')
+  const seen = new Set()
+  for (const file of walkTsx(srcRoot))
+    for (const [, attr] of readFileSync(file, 'utf8').matchAll(/className=[`"]([^`"]*)[`"]/g))
+      for (const raw of attr.split(/\s+/)) {
+        const cls = raw.split(':').pop()
+        if (!cls || cls.includes('[') || cls.includes('{') || !OURS.test(cls)) continue
+        if (seen.has(cls)) continue
+        seen.add(cls)
+        if (!new RegExp(`\\.${cls}(?![\\w-])`).test(css))
+          failures.push(
+            `${file.split('/src/')[1]} emits "${cls}", which no rule in globals.css selects`,
+          )
+      }
+}
+
+// --- One paragraph rhythm per page ---------------------------------------
+// About's opening sentence comes from its own CMS field and so renders
+// outside the rich text. Two paragraph streams on one page that are
+// almost but not quite aligned read worse than two that obviously differ.
+{
+  const lh = (sel) => {
+    const m = css.match(new RegExp(`\\n  \\${sel}\\s*\\{([^{}]*)\\}`))
+    return m && m[1].match(/line-height:\s*([\d.]+)/)?.[1]
+  }
+  const a = lh('.prose')
+  const b = lh('.prose-lead')
+  if (!a || !b) failures.push('could not read line-height from .prose and .prose-lead')
+  else if (a !== b)
+    failures.push(
+      `.prose-lead is ${b} against .prose's ${a} — a lead paragraph outside the rich text has to keep its rhythm`,
+    )
+}
+
+// --- The gutter channel --------------------------------------------------
+// The hover arrow hangs in the gap between the label column and the rows.
+// It shipped 4px wider than that gap, so on the FIRST row of every list it
+// crossed into the label column and overlapped the label's own chevron:
+// two orange marks welded into one. The gap is now sized by the arrow, and
+// the arrow has to prove it still fits.
+{
+  const gap = Number((css.match(/--label-gap:\s*(\d+)px/) || [])[1])
+  if (!gap) failures.push('--label-gap is missing, so the hover channel cannot be checked')
+  const baseW = Number((css.match(/\.entry-lead\s*\{[^{}]*width:\s*(\d+)px/) || [])[1])
+  for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!selector.includes('.entry-lead')) continue
+    const named = selector
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .trim()
+      .replace(/\s+/g, ' ')
+    const left = body.match(/left:\s*(-?[\d.]+)px/)
+    if (!left) continue
+    const w = Number((body.match(/width:\s*(\d+)px/) || [, baseW])[1])
+    const hang = Math.abs(Number(left[1]))
+    if (gap && hang > gap)
+      failures.push(
+        `${named} hangs ${hang}px into a ${gap}px channel — it reaches past the label column's edge and collides with the label's mark`,
+      )
+    if (w && hang < w)
+      failures.push(
+        `${named} hangs ${hang}px with a ${w}px mark — the mark's right edge lands inside the row's own text`,
+      )
+  }
+}
+
+// --- Index sections always cost something --------------------------------
+// About shipped welded to the paragraph above it: its section followed a
+// prose block rather than a page header, matched no adjacency rule, and so
+// fell through to a margin of zero. A missing rule should cost too much
+// space, never none.
+{
+  const base = css.match(/\n  \.index-section\s*\{([^{}]*)\}/)
+  const mt = base && base[1].match(/margin-top:\s*var\(--(gap-[a-z-]+)\)/)
+  if (!base) failures.push('could not find the base .index-section rule')
+  else if (!mt)
+    failures.push(
+      '.index-section declares no default margin-top — a section that matches no adjacency rule would sit at zero',
+    )
+}
+
 // --- Usage ---------------------------------------------------------------
 // The token block says --c-blue is "never body text". Saying it is not the
 // same as it being true, and the colour is only safe at the 3:1 tier.
@@ -463,6 +585,14 @@ for (const file of walk(srcDir)) {
   const body = readFileSync(file, 'utf8')
   if (/\btext-blue\b/.test(body))
     failures.push(`${file.split('/src/')[1]} uses text-blue — azure is not a text colour`)
+  // About set its opening paragraph at --text-md in --c-mute: two steps
+  // lighter than the body it introduced, which inverts the hierarchy and
+  // makes the page's first sentence read as a pulled quotation.
+  for (const [, cls] of body.matchAll(/className="([^"]*)"/g))
+    if (/\btext-md\b/.test(cls) && /\btext-mute\b/.test(cls))
+      failures.push(
+        `${file.split('/src/')[1]} sets a 19px deck in --c-mute — a deck lighter than the body it introduces reads as a quotation: "${cls}"`,
+      )
 }
 
 if (process.argv.includes('--print')) {
