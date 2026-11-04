@@ -105,7 +105,7 @@
   --color-orange-text: var(--c-orange-text);
   --color-blue: var(--c-blue);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-franklin), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
@@ -124,15 +124,20 @@
      The clamps all reach their ceiling near 900px, so the scale's
      internal ratios hold across the whole desktop range instead of
      drifting through one band.
-     Inter is drawn for ~16px up, so the two small steps get a touch of
-     tracking back to hold their colour at caption sizes. */
+     The two small steps carry tracking so their colour holds at caption
+     size. The figures were re-derived against Libre Franklin rather than
+     inherited: normalising advance width by x-height, 12px/0.01em lands
+     within 0.2% of the face this replaced, and 13.5px/0.005em runs 1.0%
+     looser than its equivalent. Both are under the threshold where the
+     grey of a caption visibly shifts, so neither was moved — but the
+     numbers are here so the next swap re-measures instead of assuming. */
   --text-xs: 12px;
   --text-xs--letter-spacing: 0.01em;
   --text-sm: 13.5px;
   --text-sm--letter-spacing: 0.005em;
   --text-base: 17px;
   --text-ui: 15px; /* section labels — the one sans step above body-adjacent UI */
-  --text-code: 14px; /* mono runs small against Inter at the same nominal size */
+  --text-code: 14px; /* mono runs small against the sans at the same nominal size */
   --text-md: 19px;
   --text-lg: 21px;
   /* The xl floor is 23px, not 21px: a clamp that bottoms out at --text-lg
@@ -714,11 +719,17 @@
     position: absolute;
     inset: -5px -2px;
   }
+  /* letter-spacing is applied after EVERY character, the last one
+     included, so a letterspaced word inside a border sits 0.07em closer
+     to the left edge than the right. At 12px that is 0.84px of lean on a
+     7px pad — small, but it is the only thing in the row that is not
+     centred in its own box. The right pad gives the tracking back. */
   .chip-state {
     background: none;
     border-color: var(--c-line-strong);
     margin-left: 9px;
     letter-spacing: 0.07em;
+    padding-right: calc(7px - 0.07em);
     text-transform: uppercase;
     vertical-align: 2px;
   }
@@ -756,8 +767,8 @@
    * ------------------------------------------------------------------ */
   /* No max-width here: inside .article and .index-offset the measure is
      already decided by the grid's gutter arithmetic (736 - 144 = 592px,
-     which measures 66 characters at 17px Inter). One thing should set
-     the measure. */
+     which measures 66 characters at 17px Libre Franklin). One thing
+     should set the measure. */
   .prose {
     font-size: var(--text-base);
     line-height: 1.7;
@@ -853,6 +864,7 @@
     top: 0;
     right: 0;
     padding: 4px 9px;
+    padding-right: calc(9px - 0.08em); /* trailing letter-space, as on .chip-state */
     font-size: var(--text-xs);
     font-weight: 500;
     letter-spacing: 0.08em;

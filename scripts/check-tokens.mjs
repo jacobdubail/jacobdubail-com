@@ -9,7 +9,7 @@
  *   node scripts/check-tokens.mjs          verify, exit non-zero on drift
  *   node scripts/check-tokens.mjs --print  print the table
  */
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
@@ -299,6 +299,89 @@ for (const [label, g] of [
         failures.push(
           `${label} ${art[i]} (${av[i]}) does not sit below ${art[i - 1]} (${av[i - 1]}) — the article ramp must descend`,
         )
+}
+
+// --- Every family the stylesheet asks for is actually loaded -------------
+// `--font-sans: var(--font-inter)` after the layout stopped defining
+// `--font-inter` does not throw, does not warn, and does not fail a build.
+// The var resolves to nothing, the fallback after the comma takes over, and
+// the whole site quietly renders in system-ui. Renaming the variable on one
+// side of that pair is exactly the kind of edit a font swap invites, so the
+// two sides are checked against each other, and against the disk.
+const LAYOUT = join(dirname(fileURLToPath(import.meta.url)), '../src/app/(frontend)/layout.tsx')
+const layout = readFileSync(LAYOUT, 'utf8')
+// One regex, so a family's binding, variable and src stay attached to each
+// other. Matching them separately pairs every variable with the first const
+// in the file.
+const declared = new Map(
+  [...layout.matchAll(/const (\w+) = localFont\(\{([^}]*)\}\)/g)].flatMap(([, binding, body]) => {
+    const name = body.match(/variable:\s*'([^']+)'/)?.[1]
+    const src = body.match(/src:\s*'([^']+)'/)?.[1]
+    return name ? [[name, { binding, src }]] : []
+  }),
+)
+for (const [, fam] of css.matchAll(/--font-(?:sans|serif|mono):\s*var\((--font-[\w-]+)\)/g)) {
+  if (!declared.has(fam))
+    failures.push(
+      `globals.css asks for ${fam}, but no localFont() in layout.tsx defines it — the family silently falls back`,
+    )
+}
+for (const [name, { binding, src }] of declared) {
+  if (!src) {
+    failures.push(`${name} is declared in layout.tsx with no src`)
+  } else if (!existsSync(join(dirname(LAYOUT), src))) {
+    failures.push(`${name} points at ${src}, which is not on disk`)
+  }
+  // A family nobody puts on <html> is a file served for nothing.
+  if (!new RegExp(`\\$\\{${binding}\\.variable\\}`).test(layout))
+    failures.push(`${name} is defined but never put on <html> — nothing can use it`)
+}
+
+// --- Letterspaced caps inside a border pay the trailing space back -------
+// CSS adds letter-spacing after the final character as well as between
+// characters, so a letterspaced word centred in a padded box is not centred:
+// it leans left by exactly one tracking unit. Nothing warns about it and it
+// survives a font swap untouched, because the offset is em-relative. Any
+// rule that letterspaces uppercase text inside its own padding has to give
+// that unit back on the right.
+const TRACK_FLOOR = 0.03 // em; below this the lean is under 0.4px at 12px
+// Non-zero horizontal padding, from either shorthand or longhand. `padding:
+// 15px 0` is not a box a word can lean inside of, so it does not count.
+const hPad = (body) => {
+  const long = [...body.matchAll(/padding-(?:right|left|inline(?:-\w+)?):\s*([^;]+)/g)]
+  if (long.some(([, v]) => parseFloat(v) > 0)) return true
+  const short = body.match(/(?:^|[;{\s])padding:\s*([^;]+)/)
+  if (!short) return false
+  const parts = short[1].trim().split(/\s+/)
+  const horiz = parts.length === 1 ? [parts[0]] : [parts[1], parts[3] ?? parts[1]]
+  return horiz.some((v) => parseFloat(v) > 0)
+}
+// A class can get its box from a base class it is layered onto — .chip-state
+// is padded by .chip and declares no padding of its own. Checking only the
+// rule's own body let exactly that case through.
+const padded = new Set()
+for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g))
+  if (hPad(body)) for (const [, c] of sel.matchAll(/\.([\w-]+)/g)) padded.add(c)
+const inABox = (sel, body) => {
+  if (hPad(body)) return true
+  for (const [, c] of sel.matchAll(/\.([\w-]+)/g)) {
+    if (padded.has(c)) return true
+    // .chip-state -> .chip
+    for (let i = c.lastIndexOf('-'); i > 0; i = c.lastIndexOf('-', i - 1))
+      if (padded.has(c.slice(0, i))) return true
+  }
+  return false
+}
+for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+  if (!/text-transform:\s*uppercase/.test(body)) continue
+  const ls = body.match(/letter-spacing:\s*([\d.]+)em/)
+  if (!ls || Number(ls[1]) < TRACK_FLOOR) continue
+  if (!inABox(sel, body)) continue
+  if (new RegExp(`padding-right:\\s*calc\\([^)]*-\\s*${ls[1]}em`).test(body)) continue
+  const name = sel.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim()
+  failures.push(
+    `${name} letterspaces uppercase at ${ls[1]}em inside a padded box but never gives the trailing space back — it leans left`,
+  )
 }
 
 // --- Type scale ---------------------------------------------------------

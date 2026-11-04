@@ -9,11 +9,12 @@ import { siteName, siteUrl } from '@/lib/site'
 
 import './globals.css'
 
-const inter = localFont({
-  src: '../../fonts/Inter.woff2',
-  variable: '--font-inter',
+const franklin = localFont({
+  src: '../../fonts/LibreFranklin.woff2',
+  variable: '--font-franklin',
   weight: '100 900',
   display: 'swap',
+  adjustFontFallback: 'Arial',
 })
 const fraunces = localFont({
   src: '../../fonts/Fraunces.woff2',
@@ -50,7 +51,7 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable}`}
+      className={`${franklin.variable} ${fraunces.variable} ${jetbrains.variable}`}
       suppressHydrationWarning
     >
       <head>
