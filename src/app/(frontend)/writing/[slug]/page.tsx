@@ -43,10 +43,10 @@ export async function generateMetadata({
 
 export default function PostPage({ params }: PageProps<'/writing/[slug]'>) {
   return (
-    <article className="index-offset">
+    <article className="article">
       <Link
         href="/writing"
-        className="group mb-12 inline-flex items-center gap-2 text-sm text-mute hover:text-fg"
+        className="tap group mb-14 inline-flex items-center gap-2 text-sm text-mute hover:text-fg"
       >
         <GappedArrow className="w-3.5 -scale-x-100 text-orange transition-transform group-hover:-translate-x-[3px]" />
         All writing
@@ -69,7 +69,7 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
   return (
     <>
       <ViewTransition name={`date-${vtKey}`} share="morph" default="none">
-        <p className="mb-3 w-fit text-sm text-faint tabular-nums">
+        <p className="mb-4 w-fit text-sm text-faint tabular-nums">
           <time dateTime={post.publishedAt ?? undefined}>
             {longDate(post.publishedAt, post.archived)}
           </time>
@@ -78,38 +78,42 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
         </p>
       </ViewTransition>
       <ViewTransition name={`title-${vtKey}`} share="morph" default="none">
-        <h1 className="mb-4 w-fit font-serif text-display font-normal tracking-[-0.02em]">
+        <h1 className="w-fit font-serif text-display font-normal tracking-[-0.02em]">
           {post.title}
         </h1>
       </ViewTransition>
 
       {post.tags?.length ? (
-        <ul className="mb-12 flex flex-wrap gap-2">
+        <ul className="mt-6 mb-10 flex flex-wrap gap-2">
           {post.tags.map((t) => (
-            <li key={t} className="rounded-full border border-line px-2.5 py-0.5 text-xs text-mute">
+            <li key={t} className="chip">
               {t}
             </li>
           ))}
         </ul>
       ) : (
-        <div className="mb-12" />
+        <div className="mb-10" />
       )}
 
       {post.archived ? (
-        <aside className="mb-8 border-l-2 border-blue bg-soft px-4 py-3 text-sm leading-[1.55] text-mute">
+        <aside className="mb-8 rounded-r-[var(--r-sm)] border-l-2 border-blue bg-soft px-4 py-3.5 text-sm leading-[1.55] text-mute">
           <b className="font-medium text-fg">From the archive.</b> Originally published{' '}
           {longDate(post.publishedAt, true)} on the previous version of this site. Some details may
           be dated.
         </aside>
       ) : null}
 
-      {post.excerpt ? <p className="mb-6 text-md leading-[1.6] text-mute">{post.excerpt}</p> : null}
+      {post.excerpt ? (
+        <p className="mb-8 max-w-[34em] text-md leading-[1.55] text-ink2">{post.excerpt}</p>
+      ) : null}
       <RichText data={post.content} />
 
       {newer || older ? (
         <nav
           aria-label="More writing"
-          className="mt-16 grid grid-cols-2 gap-4 border-t border-line pt-6 max-sm:grid-cols-1 max-sm:gap-6"
+          className={`mt-16 grid gap-4 border-t border-line pt-7 max-sm:grid-cols-1 max-sm:gap-6 ${
+            newer && older ? 'grid-cols-2' : 'grid-cols-1'
+          }`}
         >
           {older ? (
             <Link
@@ -119,13 +123,11 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
               <small className="inline-flex items-center gap-1.5 text-xs text-faint">
                 <GappedArrow className="w-[11px] -scale-x-100 text-orange" /> Previous
               </small>
-              <span className="font-serif text-md leading-[1.35] tracking-[-0.01em]">
+              <span className="font-serif text-md leading-[1.35] tracking-[-0.01em] text-balance">
                 {older.title}
               </span>
             </Link>
-          ) : (
-            <span />
-          )}
+          ) : null}
           {newer ? (
             <Link
               href={`/writing/${newer.slug}`}
@@ -134,7 +136,7 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
               <small className="inline-flex items-center gap-1.5 text-xs text-faint">
                 Next <GappedArrow className="w-[11px] text-orange" />
               </small>
-              <span className="font-serif text-md leading-[1.35] tracking-[-0.01em]">
+              <span className="font-serif text-md leading-[1.35] tracking-[-0.01em] text-balance">
                 {newer.title}
               </span>
             </Link>

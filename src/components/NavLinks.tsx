@@ -12,7 +12,7 @@ const links: { href: Route; label: string }[] = [
 
 function List({ current }: { current?: string }) {
   return (
-    <ul className="flex gap-6 text-mute max-sm:gap-[18px]">
+    <ul className="flex items-center gap-7 text-mute max-sm:gap-5">
       {links.map(({ href, label }) => {
         const active = current === href || current?.startsWith(`${href}/`)
         return (
@@ -20,7 +20,7 @@ function List({ current }: { current?: string }) {
             <Link
               href={href}
               aria-current={active ? 'page' : undefined}
-              className="inline-flex items-center gap-1.5 py-1 hover:text-fg aria-[current=page]:text-fg"
+              className="tap inline-flex items-center gap-1.5 hover:text-fg aria-[current=page]:font-medium aria-[current=page]:text-fg"
             >
               {active ? <span className="chev text-orange" aria-hidden /> : null}
               {label}

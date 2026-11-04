@@ -30,9 +30,13 @@ export default async function ProjectsPage() {
   return (
     <>
       <PageHeader title="Projects" intro={settings.projectsIntro} />
-      {current.length ? <IndexSection label="Now">{rows(current)}</IndexSection> : null}
+      {current.length ? (
+        <IndexSection label="Now" group>
+          {rows(current)}
+        </IndexSection>
+      ) : null}
       {archive.length ? (
-        <IndexSection label="Archive" aside={range} className={current.length ? 'mt-12' : 'mt-16'}>
+        <IndexSection label="Archive" aside={range} group lead={!current.length}>
           {rows(archive)}
         </IndexSection>
       ) : null}

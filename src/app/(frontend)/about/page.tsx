@@ -33,7 +33,7 @@ export default async function AboutPage() {
       </div>
 
       {about.now?.length ? (
-        <IndexSection label="Now">
+        <IndexSection label="Now" group>
           <dl className="grid grid-cols-[96px_1fr] gap-x-4 gap-y-3 pt-4">
             {about.now.map((n) => (
               <div key={n.id ?? n.label} className="contents">
@@ -46,14 +46,14 @@ export default async function AboutPage() {
       ) : null}
 
       {settings.social?.length ? (
-        <IndexSection label="Elsewhere" className="mt-12">
+        <IndexSection label="Elsewhere" group>
           <ul className="flex flex-wrap gap-2 pt-4">
             {settings.social.map((l) => (
               <li key={l.id ?? l.url}>
                 <a
                   href={l.url}
                   rel="me"
-                  className="group inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-1.5 text-sm hover:border-orange-text hover:text-orange-text"
+                  className="chip group inline-flex items-center gap-2 px-3.5 py-2 text-sm hover:border-orange-text hover:text-orange-text"
                 >
                   <GappedArrow className="w-[11px] text-orange" />
                   {l.label}

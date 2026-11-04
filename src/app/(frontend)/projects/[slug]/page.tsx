@@ -39,7 +39,7 @@ const href = (url: string) => (/^https?:\/\//.test(url) ? url : `https://${url}`
 
 export default function ProjectPage({ params }: PageProps<'/projects/[slug]'>) {
   return (
-    <article className="index-offset">
+    <article className="article">
       <Link
         href="/projects"
         className="group mb-12 inline-flex items-center gap-2 text-sm text-mute hover:text-fg"

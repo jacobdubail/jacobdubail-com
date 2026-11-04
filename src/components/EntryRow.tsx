@@ -22,11 +22,11 @@ export function EntryRow({ href, vtKey, title, date, description, archived }: Pr
   return (
     <Link href={href as Route} className="entry group">
       <EntryLead />
-      <span className="flex min-w-0 flex-col gap-0.5">
+      <span className="flex min-w-0 flex-col gap-1">
         <ViewTransition name={`title-${vtKey}`} share="morph" default="none">
           <span className="entry-title">
             {title}
-            {archived ? <span className="archive-tag">Archive</span> : null}
+            {archived ? <span className="chip chip-state">Archive</span> : null}
           </span>
         </ViewTransition>
         {description ? (

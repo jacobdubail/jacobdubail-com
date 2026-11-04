@@ -1,9 +1,9 @@
 export function BackToTop() {
   return (
-    <a href="#top" className="group inline-flex items-center gap-1.5 hover:text-fg">
+    <a href="#top" className="tap group inline-flex items-center gap-1.5 hover:text-fg">
       Top
       <span
-        className="chev -rotate-90 text-orange transition-transform group-hover:-translate-y-0.5"
+        className="chev -rotate-90 text-line-strong transition-[transform,color] group-hover:-translate-y-0.5 group-hover:text-orange"
         aria-hidden
       />
     </a>

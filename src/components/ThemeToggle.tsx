@@ -10,12 +10,17 @@ const subscribe = (cb: () => void) => {
 const getSnapshot = () => document.documentElement.classList.contains('dark')
 const getServerSnapshot = () => false
 
-/** Light/dark switch. Follows the OS until clicked; the choice is stored per browser. */
+/**
+ * Light/dark switch. Follows the OS until clicked; the choice is stored per
+ * browser. The visible label names the current theme rather than the
+ * destination, so it cannot be misread as a status line.
+ */
 export function ThemeToggle() {
   const dark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   return (
     <button
       type="button"
+      aria-pressed={dark}
       onClick={() => {
         const next = !dark
         document.documentElement.classList.toggle('dark', next)
@@ -23,10 +28,11 @@ export function ThemeToggle() {
           localStorage.setItem('theme', next ? 'dark' : 'light')
         } catch {}
       }}
-      className="cursor-pointer hover:text-fg"
+      className="tap cursor-pointer hover:text-fg"
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {dark ? 'Light' : 'Dark'}
+      {dark ? 'Dark' : 'Light'}
+      <span className="sr-only"> theme — switch to {dark ? 'light' : 'dark'}</span>
     </button>
   )
 }

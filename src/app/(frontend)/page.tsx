@@ -26,10 +26,9 @@ export default async function HomePage() {
 
       {posts.length ? (
         <IndexSection
-          className="mt-24 max-sm:mt-16"
           label="Writing"
           aside={
-            <Link href="/writing" className="hover:text-orange-text">
+            <Link href="/writing" className="index-aside">
               All {posts.length} posts
             </Link>
           }
@@ -51,7 +50,7 @@ export default async function HomePage() {
         <IndexSection
           label="Projects"
           aside={
-            <Link href="/projects" className="hover:text-orange-text">
+            <Link href="/projects" className="index-aside">
               All {projects.length} projects
             </Link>
           }

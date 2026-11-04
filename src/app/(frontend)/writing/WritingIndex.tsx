@@ -34,7 +34,7 @@ export function WritingIndex({ posts }: { posts: PostListItem[] }) {
     <>
       {allTags.length ? (
         <div
-          className="index-offset mt-6 flex flex-wrap gap-2"
+          className="index-offset mt-8 flex flex-wrap gap-2"
           role="group"
           aria-label="Filter by tag"
         >
@@ -44,7 +44,7 @@ export function WritingIndex({ posts }: { posts: PostListItem[] }) {
               type="button"
               onClick={() => setTag(t)}
               aria-pressed={tag === t}
-              className="cursor-pointer rounded-full border border-line px-3 py-1 text-xs text-mute hover:border-faint aria-pressed:border-fg aria-pressed:bg-fg aria-pressed:text-bg"
+              className="chip cursor-pointer px-3 py-1.5 hover:border-fg hover:text-fg aria-pressed:border-fg aria-pressed:bg-fg aria-pressed:text-bg"
             >
               {t ?? 'All'}
             </button>
@@ -53,7 +53,7 @@ export function WritingIndex({ posts }: { posts: PostListItem[] }) {
       ) : null}
 
       {groups.map(([y, items], i) => (
-        <IndexSection key={y} label={String(y)} className={i === 0 ? 'mt-16' : 'mt-12'}>
+        <IndexSection key={y} label={String(y)} group lead={i === 0}>
           {items.map((p) => (
             <EntryRow
               key={p.id}
