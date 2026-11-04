@@ -83,7 +83,9 @@
   --c-soft: #1e242e;
   --c-orange: #e3672e;
   --c-orange-text: #e8763c;
-  --c-blue: #4791f4; /* also the band: in dark, identity and system share one azure, by choice */
+  --c-blue: #4791f4; /* in dark this one token is the band, the headline's
+     azure word, the focus ring and the selection wash — four roles, one
+     colour, by choice rather than by collision */
 
   --c-band: var(--c-blue);
   color-scheme: dark;
@@ -118,7 +120,7 @@
      every adjacent pair is at least 1.10x apart at BOTH ends of its
      clamp, which is asserted rather than asserted-about.
      xs 12 · sm 13.5 · ui 15 · base 17 · md 19 · lg 21 ·
-     xl 24-26 · 2xl 27-30 · display 36-46
+     xl 23.5-26 · 2xl 26-30 · display 36-46
      The clamps all reach their ceiling near 900px, so the scale's
      internal ratios hold across the whole desktop range instead of
      drifting through one band.
@@ -135,8 +137,8 @@
   --text-lg: 21px;
   /* The xl floor is 23px, not 21px: a clamp that bottoms out at --text-lg
      would make h2 and h3 identical on every phone and tablet. */
-  --text-xl: clamp(24px, 2.8vw, 26px);
-  --text-2xl: clamp(27px, 3.3vw, 30px);
+  --text-xl: clamp(23.5px, 2.8vw, 26px);
+  --text-2xl: clamp(26px, 3.3vw, 30px);
   --text-display: clamp(36px, 5.1vw, 46px);
   --text-display--line-height: 1.1;
 
@@ -194,11 +196,11 @@
     :root {
       --gap-top: 44px;
       --gap-chrome: 52px;
-      --gap-hero: 64px;
+      --gap-hero: 56px;
       --gap-lead: 44px;
       --gap-group: 52px;
       --gap-section: 88px;
-      --gap-footer: 56px;
+      --gap-footer: 48px;
       --gap-bottom: 72px;
       --gap-art-lead: 36px;
       --gap-art-body: 32px;
@@ -811,17 +813,20 @@
   }
   /* The pull quote is the one place the mark earns the accent: it is
      rare, it is the author's voice, and it is a deliberate interruption. */
-  /* Capped by measure, not only by size: at 390px the clamp floor gives a
-     quote the same relative size it has at 720px, so it gained mass as the
-     column halved and out-weighed the title of the piece. */
+  /* No max-width here. `em` on an element whose own font-size is 27-30px
+     computes to 648-720px against a 350-592px column, so the cap never
+     bound — the third inert em-cap this file has shipped, now guarded
+     against in scripts/check-tokens.mjs. The quote's mass at 390px is
+     taken out with size and leading instead, as far as the 1.10x ladder
+     allows: it still runs longer than a two-line title, which is the
+     honest limit of what the scale can do for a long quote. */
   .prose blockquote {
     position: relative;
-    max-width: 24em;
     padding-left: 30px;
     font-family: var(--font-serif);
     font-size: var(--text-2xl);
     font-weight: 400;
-    line-height: 1.32;
+    line-height: 1.28;
     letter-spacing: -0.014em;
   }
   .prose > * + blockquote {

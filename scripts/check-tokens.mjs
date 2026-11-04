@@ -167,6 +167,13 @@ for (const theme of ['light', 'dark']) {
     failures.push(
       `${theme} --c-orange and --c-blue differ by ${Math.round(dC * 1000) / 1000} in OKLab chroma (limit ${CHROMA_TOLERANCE}) — the more saturated word advances`,
     )
+  // The act-on-this pair is two values of one hue: a mark tier and a text
+  // tier. Nothing stopped them converging into one.
+  const tang = deltaE(t['--c-orange'], t['--c-orange-text'])
+  if (tang < 0.02)
+    failures.push(
+      `${theme} --c-orange and --c-orange-text are ΔE ${r2(tang)} apart — the mark and text tiers have converged`,
+    )
   // The two hues must also stay far enough apart to read as two hues.
   const sep = deltaE(t['--c-orange'], t['--c-blue'])
   if (sep < 0.15)
@@ -333,6 +340,38 @@ for (let i = 1; i < present.length; i++) {
     )
 }
 
+// Endpoints alone cannot see the middle: two steps with different vw slopes
+// can satisfy both endpoint comparisons and still converge between them.
+// Sample the ratio across the range instead of trusting the ends.
+const slopes = Object.fromEntries(
+  [
+    ...css.matchAll(
+      /--text-([a-z0-9]+):\s*clamp\(\s*([\d.]+)px\s*,\s*([\d.]+)vw\s*,\s*([\d.]+)px/g,
+    ),
+  ].map(([, k, lo, vw, hi]) => [k, { lo: +lo, vw: +vw, hi: +hi }]),
+)
+const sizeAt = (k, vwPx) => {
+  const c = slopes[k]
+  if (!c) return scale[k].min
+  return Math.min(Math.max(c.lo, (c.vw * vwPx) / 100), c.hi)
+}
+for (let i = 1; i < present.length; i++) {
+  const [a, b] = [present[i - 1], present[i]]
+  let worst = Infinity
+  let at = 0
+  for (let vw = 320; vw <= 1920; vw += 4) {
+    const r = sizeAt(b, vw) / sizeAt(a, vw)
+    if (r < worst) {
+      worst = r
+      at = vw
+    }
+  }
+  if (worst < STEP - 0.001)
+    failures.push(
+      `--text-${b} falls to ${r2(worst)}x of --text-${a} at ${at}px wide — under the ${STEP}x floor, between the clamp endpoints`,
+    )
+}
+
 // All nine compared, not the four that happen to be clamped: moving
 // --text-base to 18px while the comment still read "base 17" used to pass.
 const claimed = prose.match(
@@ -367,6 +406,37 @@ for (const size of ['sm', 'md', 'lg']) {
   if (Math.abs(w / h - 0.6) > 0.04)
     failures.push(
       `--chev-${size} is ${w}x${h} (${r2(w / h)}) — the mask is 3:5, so every size must be 0.6`,
+    )
+}
+
+// --- Chevron usage -------------------------------------------------------
+// The ratio check validates the tokens; this stops a component reaching
+// past them, which is how three off-scale chevrons survived three rounds.
+for (const file of (function walkOnce(d) {
+  return readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walkOnce(join(d, e.name)) : e.name.endsWith('.tsx') ? [join(d, e.name)] : [],
+  )
+})(join(dirname(fileURLToPath(import.meta.url)), '../src'))) {
+  const body = readFileSync(file, 'utf8')
+  for (const [, cls] of body.matchAll(/className="([^"]*\bchev\b[^"]*)"/g))
+    if (/\b[wh]-\[\d/.test(cls))
+      failures.push(
+        `${file.split('/src/')[1]} sizes a chevron with a literal — use --chev-sm/md/lg: "${cls}"`,
+      )
+}
+
+// --- Inert em caps -------------------------------------------------------
+// Shipped three times now: a max-width in `em` on an element whose own
+// font-size is larger than the base, which computes wider than the column
+// it was meant to cap and silently does nothing.
+for (const [, selector, body] of css.matchAll(/([^\n{}]+)\{([^{}]*)\}/g)) {
+  const cap = body.match(/max-width:\s*([\d.]+)em/)
+  const fs = body.match(/font-size:\s*var\(--text-([a-z0-9]+)\)/)
+  if (!cap || !fs) continue
+  const step = scale[fs[1]]
+  if (step && step.min > 17 && Number(cap[1]) * step.min > 600)
+    failures.push(
+      `${selector.trim()} caps at ${cap[1]}em of ${step.min}px = ${Math.round(Number(cap[1]) * step.min)}px — wider than any column here, so it never binds`,
     )
 }
 
