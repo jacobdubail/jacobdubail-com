@@ -23,13 +23,13 @@ export function Headline({
   const parts: ReactNode[] = text.split(pattern).map((part, i) => {
     if (part === blue)
       return (
-        <span key={i} className="text-head-a">
+        <span key={i} className="headline-a">
           {part}
         </span>
       )
     if (part === orange)
       return (
-        <span key={i} className="text-head-b">
+        <span key={i} className="headline-b">
           {part}
         </span>
       )

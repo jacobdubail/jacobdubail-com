@@ -64,7 +64,7 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <div className="band" aria-hidden />
-        <div className="mx-auto max-w-[784px] px-6 pt-14 pb-20 max-lg:px-8 max-sm:px-5 max-sm:pt-11 max-sm:pb-14">
+        <div className="mx-auto max-w-[784px] px-6 pt-[var(--gap-top)] pb-[var(--gap-bottom)] max-lg:px-8 max-sm:px-5">
           <SiteNav />
           <main id="main">{children}</main>
           <SiteFooter />

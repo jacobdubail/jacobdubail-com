@@ -6,74 +6,78 @@
 /* ------------------------------------------------------------------ *
  * Design tokens
  *
- * Color roles — two accents inside the content, and one element that
- * sits outside the grammar on purpose:
+ * Colour roles — two accents inside the content, and one pair that sits
+ * outside the grammar on purpose:
  *   tangerine (--c-orange / --c-orange-text) = you can act on this.
  *     Links, the active nav item, hover and motion marks.
  *   azure (--c-blue) = the system is talking back.
- *     Focus ring, selection, the archive callout.
- *   the band and the headline accents = identity, not semantics.
- *     The band is the site announcing itself before any content loads,
- *     so its hue is a signature and is allowed to swap per theme. The
- *     two headline words are the same gesture at reading size. Both are
- *     declared exceptions rather than leaks, and both are tuned so the
- *     two accent words land within 0.2 of each other's contrast — a
- *     headline should not have a winning word.
- * Decorative marks (list bullets, rules, separators) are neutral at
- * rest and only take an accent when they signal state.
+ *     Focus ring, selection, the archive note's rule.
+ *   --c-head-a / --c-head-b = identity, not semantics.
+ *     The headline's two accent words, and the band — which is the site
+ *     announcing itself before any content loads. These are a declared
+ *     exception rather than a leak: the band therefore always draws from
+ *     the identity pair and never from the two functional accents, and
+ *     the pair is tuned to equal contrast so the headline has no winning
+ *     word. --c-head-b is held clear of --c-orange-text so an accent
+ *     word is not mistakable for a link.
+ * Decorative marks (list bullets, rules, separators) are neutral at rest
+ * and only take an accent when they signal state.
  *
  * Neutrals are one warm family in light and one cool family in dark.
- * Every text token below clears 4.5:1 on BOTH --c-bg and --c-soft, so
- * any text token is safe on any surface. Verified, not assumed.
  *
- * One deliberate asymmetry: light's fg:mute:faint intervals are
- * 1.92x / 3.02x / 3.40x below fg, and dark's are 1.91x / 2.40x / 2.65x.
- * Matching them exactly would put dark --c-faint at 3.74:1 on --c-soft.
- * Dark has less room below its foreground before the AA floor than
- * light does, so the ramp is compressed rather than the floor broken.
- * ink2 matches; mute and faint are as close as AA allows.
+ * Contrast contract, in two tiers:
+ *   Every token set at body size clears 4.5:1 on BOTH --c-bg and
+ *   --c-soft, so any such token is safe on any surface.
+ *   --c-orange, --c-head-a and --c-head-b are large-type and mark-only
+ *   and are held to the 3:1 non-text floor instead. --c-line-strong is
+ *   an object boundary and is also held to 3:1 on both surfaces.
+ *
+ * One deliberate asymmetry: light's ink2/mute/faint sit 1.92x / 2.89x /
+ * 3.25x below fg, and dark's sit 1.91x / 2.40x / 2.80x. Matching them
+ * exactly would put dark --c-faint below the AA floor on --c-soft. Dark
+ * has less room beneath its foreground before that floor, so the ramp is
+ * compressed rather than the floor broken. ink2 matches exactly; faint
+ * now sits at the darkest value AA still permits on both surfaces.
+ *
+ * Every number in this block is checked by scripts/check-tokens.mjs,
+ * which fails the build on drift. Do not hand-edit the ratios — move a
+ * value and re-run `pnpm check:tokens --print`.
  * ------------------------------------------------------------------ */
 :root {
-  --c-bg: #fdfcfa; /* warm paper, so the tinted surfaces read as the same stock */
-  --c-fg: #17150f; /* 17.8 : 1 */
-  --c-ink2: #4a453d; /* 9.27 : 1  — decks, secondary prose */
-  --c-mute: #67625b; /* 5.89 : 1  — UI labels, neutral marks */
-  --c-faint: #6f6a63; /* 5.23 : 1  — dates, metadata (4.80 on soft) */
+  --c-bg: #fdfcfa;
+  --c-fg: #17150f;
+  --c-ink2: #4a453d;
+  --c-mute: #645f58;
+  --c-faint: #6b6760;
   --c-line: #e6e2db; /* hairline dividers only — decorative */
-  --c-line-strong: #8c867f; /* 3.51 on bg, 3.11 on soft — boundaries of objects that carry state */
-  --c-soft: #f2eee6; /* raised surface — 1.13 : 1, reads raised without borrowing its border */
-  --c-orange: #c44e18; /* 4.60 on bg, 4.23 on soft — marks, large type, band */
-  --c-orange-text: #b34814; /* 5.31 on bg, 4.71 on soft — link text */
-  --c-blue: #1a66c7; /* 5.43 : 1 — focus, selection, system notes */
+  --c-line-strong: #88827a; /* boundaries of objects that carry state */
+  --c-soft: #eee8de; /* raised surface */
+  --c-orange: #c44e18; /* marks, large type */
+  --c-orange-text: #ad4613; /* link text */
+  --c-blue: #1a66c7; /* focus, selection, system notes */
+  --c-head-a: #1c6dd4; /* identity — headline, band */
+  --c-head-b: #cb3c19;
 
-  /* Display-only pair. The headline is a declared exception to the two
-     role colours, so it gets its own tokens rather than dragging the
-     functional ones off their jobs. Tuned to within 0.01 of each other
-     so the headline has no winning word. */
-  --c-head-a: #1c6dd4; /* 4.89 : 1 */
-  --c-head-b: #bd4b17; /* 4.90 : 1 */
-
-  --c-band: var(--c-orange);
+  --c-band: var(--c-head-b);
   color-scheme: light;
 }
 
 .dark {
   --c-bg: #101318;
-  --c-fg: #e5e8ee; /* 15.16 : 1 — eased off pure white so 46px serif doesn't halate */
-  --c-ink2: #a2aab6; /* 7.94 : 1 — 1.91x below fg, matching light's 1.92x */
-  --c-mute: #9097a3; /* 6.33 on bg, 5.30 on soft */
-  --c-faint: #888f9b; /* 5.72 on bg, 4.79 on soft */
-  --c-line: #232832; /* 1.26 : 1 — a divider is the same amount of structure in both themes */
-  --c-line-strong: #65707e; /* 3.70 on bg, 3.10 on soft */
-  --c-soft: #1e242e; /* 1.22 : 1 — the fill carries the surface, not the border */
-  --c-orange: #e3672e; /* 5.54 : 1 */
-  --c-orange-text: #e8763c; /* 6.28 on bg, 5.26 on soft — distinct from --c-orange, same tangerine as light */
-  --c-blue: #5c9df5; /* 6.73 : 1 */
+  --c-fg: #e5e8ee; /* eased off pure white so 46px serif does not halate */
+  --c-ink2: #a2aab6;
+  --c-mute: #9097a3;
+  --c-faint: #848b96;
+  --c-line: #232832;
+  --c-line-strong: #65707e;
+  --c-soft: #1e242e;
+  --c-orange: #e3672e;
+  --c-orange-text: #e8763c;
+  --c-blue: #5c9df5;
+  --c-head-a: #5a9bf4;
+  --c-head-b: #ea7a5f;
 
-  --c-head-a: #5397f4; /* 6.29 : 1 */
-  --c-head-b: #e67744; /* 6.28 : 1 */
-
-  --c-band: var(--c-blue);
+  --c-band: var(--c-head-a);
   color-scheme: dark;
 }
 
@@ -89,8 +93,6 @@
   --color-orange: var(--c-orange);
   --color-orange-text: var(--c-orange-text);
   --color-blue: var(--c-blue);
-  --color-head-a: var(--c-head-a);
-  --color-head-b: var(--c-head-b);
   --color-band: var(--c-band);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -103,7 +105,8 @@
   --spacing: 4px;
 
   /* Type scale. Every step has one job; no two steps share a role.
-     12 / 13.5 / 17 / 19 / 21 / 24 / 30 / 46
+     xs 12 · sm 13.5 · ui 15 · base 17 · md 19 · lg 21 ·
+     xl 23-25 · 2xl 26-30 · display 35-46
      Inter is drawn for ~16px up, so the two small steps get a touch of
      tracking back to hold their colour at caption sizes. */
   --text-xs: 12px;
@@ -117,8 +120,8 @@
   /* The xl floor is 23px, not 21px: a clamp that bottoms out at --text-lg
      would make h2 and h3 identical on every phone and tablet. */
   --text-xl: clamp(23px, 2.6vw, 25px);
-  --text-2xl: clamp(27px, 3.6vw, 31px);
-  --text-display: clamp(33px, 6.4vw, 46px);
+  --text-2xl: clamp(26px, 3.4vw, 30px);
+  --text-display: clamp(35px, 6.6vw, 46px);
   --text-display--line-height: 1.1;
 
   --breakpoint-sm: 600px;
@@ -138,12 +141,18 @@
        change on the page. Page chrome gets less. --- */
     --gap-top: 56px; /* page top -> nav */
     --gap-chrome: 80px; /* nav -> content */
-    --gap-hero: 96px; /* hero -> first index */
+    --gap-hero: 80px; /* hero -> first index */
     --gap-lead: 64px; /* page header -> a stack of like sections */
     --gap-group: 72px; /* like section -> like section */
-    --gap-section: 112px; /* unlike section -> unlike section */
+    --gap-section: 112px; /* unlike section -> unlike section — 1.4x the hero break, so the ranking is readable */
     --gap-footer: 88px; /* content -> footer */
     --gap-bottom: 80px; /* footer -> page bottom */
+
+    /* Inside an article, descending: back link, header blocks, body. */
+    --gap-art-lead: 48px; /* back link -> header */
+    --gap-art-body: 40px; /* header -> body, and body -> article footer */
+    --gap-art-block: 32px; /* between header blocks */
+    --gap-art-tight: 20px; /* title -> its own tags */
 
     /* --- Corner radii. Two values: chips and code inline, blocks. --- */
     --r-sm: 4px;
@@ -169,6 +178,10 @@
       --gap-section: 80px;
       --gap-footer: 64px;
       --gap-bottom: 56px;
+      --gap-art-lead: 36px;
+      --gap-art-body: 32px;
+      --gap-art-block: 24px;
+      --gap-art-tight: 16px;
     }
   }
 }
@@ -225,13 +238,14 @@
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
   }
-  .chev-md {
-    width: var(--chev-md-w);
-    height: var(--chev-md-h);
+
+  /* The identity pair is applied from here rather than exposed as a
+     Tailwind colour, so it cannot end up on a 12px label. */
+  .headline-a {
+    color: var(--c-head-a);
   }
-  .chev-lg {
-    width: var(--chev-lg-w);
-    height: var(--chev-lg-h);
+  .headline-b {
+    color: var(--c-head-b);
   }
 
   /* Band across the top of every page */
@@ -285,7 +299,11 @@
     top: var(--stick);
     align-self: start;
     grid-column: 1;
-    grid-row: 2;
+    /* Spans the implicit rows so its sticky containing block is the whole
+       article rather than the one row the h1 occupies — otherwise it
+       travels ~40px and scrolls away. `-1` resolves against the explicit
+       grid, which has no rows here, so the span is counted instead. */
+    grid-row: 2 / span 50;
     padding-top: 2px;
     text-align: right;
   }
@@ -325,6 +343,9 @@
   .index-section.is-lead {
     margin-top: var(--gap-lead);
   }
+  /* The gutter column sets everything against its inner edge, so the
+     label, the aside and a post's meta all build one crisp margin 24px
+     off the content — whichever route is rendering it. */
   .index-label {
     position: sticky;
     top: var(--stick);
@@ -332,9 +353,11 @@
     z-index: 1;
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 7px;
     padding-top: 14px;
     line-height: 1.25;
+    text-align: right;
   }
   .index-label > .name {
     display: inline-flex;
@@ -365,13 +388,14 @@
       color: var(--c-orange);
     }
   }
+  /* Lighter than the label it sits under, but the underline is solid
+     enough to read as a link without hovering. */
   .index-aside {
     width: fit-content;
-    font-size: var(--text-xs);
-    letter-spacing: 0.01em;
+    font-size: var(--text-sm);
     color: var(--c-faint);
     text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
     text-underline-offset: 3px;
   }
   .index-aside:hover {
@@ -397,6 +421,7 @@
       flex-direction: row;
       justify-content: space-between;
       align-items: baseline;
+      text-align: left;
       padding: 10px 0;
       top: 0;
       /* A sticky layer needs to read as a layer. The 1.26:1 hairline
@@ -407,6 +432,8 @@
     }
     .index-rows {
       border-top: 0;
+      /* The sticky label already draws the rule that opens the list, so
+         the first row needs the optical gap the border-top used to give. */
       padding-top: 4px;
     }
   }
@@ -421,10 +448,10 @@
     padding: 14px 0;
     border-bottom: 1px solid var(--c-line);
   }
-  /* Between stacked sections a trailing rule just stacks a third hairline
-     into the same 200px. The last list on the page still closes, so a
-     list is never open at one end and bounded at the other. */
-  .index-section:not(:last-of-type) .entry:last-child {
+  /* A list is opened by the rule under its label and closed by whatever
+     follows it — the next section's gap, or the footer's own rule. A
+     trailing hairline would just stack a second one into the same 90px. */
+  .entry:last-child {
     border-bottom: 0;
   }
   .entry-date {
@@ -552,8 +579,9 @@
 
   /* --- Chips. One shape, one size, one border token. The only thing
      that separates a state chip from a topic chip is its case. --- */
-  /* A topic tag is not interactive and carries no state, so it is set in
-     the surface rather than outlined — only a state chip gets a boundary. */
+  /* Two chips, one size. A topic tag is not interactive and carries no
+     state, so it sits in the surface; a state chip gets a boundary. Fill
+     and case are the only things that separate them — never size. */
   .chip {
     display: inline-block;
     border: 1px solid transparent;
@@ -571,7 +599,6 @@
     background: none;
     border-color: var(--c-line-strong);
     margin-left: 9px;
-    font-size: 11px;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     vertical-align: 2px;
@@ -589,8 +616,8 @@
   a.ext::after {
     content: '';
     display: inline-block;
-    width: var(--chev-md-w);
-    height: var(--chev-md-h);
+    width: var(--chev-sm-w);
+    height: var(--chev-sm-h);
     margin-left: 5px;
     vertical-align: 0.4em;
     background: currentColor;
@@ -602,10 +629,12 @@
   /* ------------------------------------------------------------------ *
    * Prose (rich text from Payload)
    * ------------------------------------------------------------------ */
+  /* No max-width here: inside .article and .index-offset the measure is
+     already decided by the grid's gutter arithmetic (736 - 144 = 592px,
+     about 68 characters at 17px). One thing should set the measure. */
   .prose {
     font-size: var(--text-base);
     line-height: 1.7;
-    max-width: 36em; /* ~70 characters at 17px Inter */
   }
   .prose > * + * {
     margin-top: 24px;
@@ -656,7 +685,8 @@
     font-weight: 600;
   }
   .prose code {
-    font: 0.88em var(--font-mono);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
     background: var(--c-soft);
     border: 1px solid var(--c-line-strong);
     padding: 1px 5px;
@@ -668,19 +698,23 @@
     background: var(--c-soft);
     border: 1px solid var(--c-line-strong);
     border-radius: var(--r-md);
-    padding: 32px 20px 20px;
+    padding: 20px;
     overflow-x: auto;
   }
   /* The language was already on the element and was being thrown away.
      It is the one piece of metadata a code block owns. */
+  /* A corner tab, anchored to the block rather than to the first line.
+     The pre reserves the width with padding-right, so a long first line
+     stops short of it instead of running underneath. */
+  .prose pre[data-language] {
+    padding-right: 72px;
+  }
   .prose pre[data-language]::before {
     content: attr(data-language);
-    position: sticky; /* stays put when a long line scrolls under it */
-    float: right;
+    position: absolute;
     top: 0;
-    margin: -26px -14px 0 0;
-    padding: 3px 9px;
-    border-radius: 0 var(--r-md) 0 var(--r-sm);
+    right: 0;
+    padding: 4px 9px;
     font-size: var(--text-xs);
     font-weight: 500;
     letter-spacing: 0.08em;

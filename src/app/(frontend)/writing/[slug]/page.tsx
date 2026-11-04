@@ -46,7 +46,7 @@ export default function PostPage({ params }: PageProps<'/writing/[slug]'>) {
     <article className="article">
       <Link
         href="/writing"
-        className="tap group mb-12 inline-flex items-center gap-2 text-sm text-mute hover:text-fg"
+        className="tap group mb-[var(--gap-art-lead)] inline-flex items-center gap-2 text-sm text-mute hover:text-fg"
       >
         <GappedArrow className="w-3.5 -scale-x-100 text-orange transition-transform group-hover:-translate-x-[3px]" />
         All writing
@@ -85,7 +85,7 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
       </ViewTransition>
 
       {post.tags?.length ? (
-        <ul className="mt-5 mb-8 flex flex-wrap gap-2">
+        <ul className="mt-[var(--gap-art-tight)] mb-[var(--gap-art-block)] flex flex-wrap gap-2">
           {post.tags.map((t) => (
             <li key={t} className="chip">
               {t}
@@ -93,11 +93,11 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
           ))}
         </ul>
       ) : (
-        <div className="mb-8" />
+        <div className="mb-[var(--gap-art-block)]" />
       )}
 
       {post.archived ? (
-        <aside className="mb-8 rounded-r-[var(--r-sm)] border-l-2 border-blue bg-soft px-4 py-3.5 text-sm leading-[1.55] text-mute">
+        <aside className="mb-[var(--gap-art-block)] rounded-r-[var(--r-sm)] border-l-2 border-blue bg-soft px-4 py-3.5 text-sm leading-[1.55] text-mute">
           <b className="font-medium text-fg">From the archive.</b> Originally published{' '}
           {longDate(post.publishedAt, true)} on the previous version of this site. Some details may
           be dated.
@@ -105,14 +105,14 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
       ) : null}
 
       {post.excerpt ? (
-        <p className="mb-12 text-md leading-[1.55] text-ink2">{post.excerpt}</p>
+        <p className="mb-[var(--gap-art-body)] text-md leading-[1.55] text-ink2">{post.excerpt}</p>
       ) : null}
       <RichText data={post.content} />
 
       {newer || older ? (
         <nav
           aria-label="More writing"
-          className={`spans mt-16 grid gap-4 border-t border-line pt-7 max-sm:grid-cols-1 max-sm:gap-6 ${
+          className={`spans mt-[var(--gap-art-body)] grid gap-4 border-t border-line pt-7 max-sm:grid-cols-1 max-sm:gap-6 ${
             newer && older ? 'grid-cols-2' : 'grid-cols-1'
           }`}
         >
@@ -121,8 +121,8 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
               href={`/writing/${older.slug}`}
               className="group flex flex-col gap-1 hover:text-orange-text"
             >
-              <small className="inline-flex items-center gap-1.5 text-xs text-faint">
-                <GappedArrow className="w-[11px] -scale-x-100 text-orange" /> Previous
+              <small className="inline-flex items-center gap-1.5 text-sm text-mute">
+                <GappedArrow className="w-3.5 -scale-x-100 text-orange" /> Previous
               </small>
               <span className="font-serif text-md leading-[1.35] tracking-[-0.01em] text-balance">
                 {older.title}
@@ -134,8 +134,8 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
               href={`/writing/${newer.slug}`}
               className="flex flex-col items-end gap-1 text-right hover:text-orange-text max-sm:items-start max-sm:text-left"
             >
-              <small className="inline-flex items-center gap-1.5 text-xs text-faint">
-                Next <GappedArrow className="w-[11px] text-orange" />
+              <small className="inline-flex items-center gap-1.5 text-sm text-mute">
+                Next <GappedArrow className="w-3.5 text-orange" />
               </small>
               <span className="font-serif text-md leading-[1.35] tracking-[-0.01em] text-balance">
                 {newer.title}
