@@ -14,14 +14,16 @@
  * Decorative marks (list bullets, rules, separators) are neutral at rest
  * and only take an accent when they signal state.
  *
- * Two places use the hues as identity rather than as meaning: the band,
- * which is the site announcing itself before any content loads, and the
- * headline's two accent words. Both now carry the pair rather than one
- * hue each, and in the same order — azure, then tangerine — so the
- * band reads as the headline's own stripe. The index label's split
- * chevron carries it a third time, at mark size. An earlier revision gave those a separate
- * --c-head-* pair so they would not drag the functional accents off
- * their jobs. That pair could not be told apart from the tokens it was
+ * Three things use the hues as identity rather than as meaning: the
+ * headline's two accent words, the ScissorLoader, and the pull quote's
+ * mark. All three run them in the same order, azure then tangerine.
+ * The band is NOT one of them. It ran the pair for one pass and was
+ * reverted to a single hue per theme; see .band for the measurement that
+ * pass produced, which is worth keeping even though the treatment was not.
+ * The index label's chevron is not one of them either — it carried the
+ * pair even more briefly, and see .index-label for why it lost it.
+ * An earlier revision gave the accent words a separate --c-head-* pair so
+ * they would not drag the functional accents off their jobs. That pair could not be told apart from the tokens it was
  * meant to differ from (ΔE 0.009 from --c-blue in dark), and a palette
  * cannot support five accents across two hues. So the hues are used
  * directly, and the thing that was actually wanted — a headline with no
@@ -69,6 +71,7 @@
   --c-orange: #c44e18; /* marks, large type */
   --c-orange-text: #b34814; /* link text */
   --c-blue: #2c77da; /* focus, selection, the archive note's rule — never text */
+  --c-band: var(--c-orange); /* the top band is one hue, per theme */
 
   color-scheme: light;
 }
@@ -85,9 +88,10 @@
   --c-soft: #1e242e;
   --c-orange: #e3672e;
   --c-orange-text: #e8763c;
-  --c-blue: #4791f4; /* the band's left end, the headline's azure word,
-     the focus ring and the selection wash — four roles, one colour, by
-     choice rather than by collision */
+  --c-blue: #4791f4; /* the band, the headline's azure word, the focus
+     ring and the selection wash — four roles, one colour, by choice
+     rather than by collision */
+  --c-band: var(--c-blue);
 
   color-scheme: dark;
 }
@@ -104,6 +108,7 @@
   --color-orange: var(--c-orange);
   --color-orange-text: var(--c-orange-text);
   --color-blue: var(--c-blue);
+  --color-band: var(--c-band);
 
   --font-sans: var(--font-franklin), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, serif;
@@ -293,25 +298,24 @@
     color: var(--c-orange);
   }
 
-  /* Band across the top of every page. It used to be one hue, and a
-     different one in each theme — tangerine in light, azure in dark —
-     so the pair that defines the headline never appeared together
-     anywhere else. Now the band runs the same pair in the same order
-     the headline reads them: azure first, tangerine last.
-     It meets at a hard stop rather than a ramp. A ramp was tried, in
-     OKLab, and it is unfixable by construction: --c-orange and
-     --c-blue are tuned to the SAME OKLab lightness so that neither
-     headline word wins, and two near-opposite hues at equal lightness
-     interpolate through near-neutral. Measured, the midpoint fell to
-     31% of the lower endpoint's chroma and more than half the band's
-     width sat under 60% — a desaturated mauve, which is a third hue,
-     at the widest element on every page. No interpolation space fixes
-     that. The answer is not to interpolate. */
+  /* Band across the top of every page. One hue, and a different one per
+     theme: tangerine in light, azure in dark.
+     It ran the headline's pair as a hard 50/50 split for one pass, so the
+     two hues would meet somewhere other than the headline. Reverted on the
+     author's call. The finding from that pass is kept because it is not
+     obvious and it cost something to get: if the pair is ever run across
+     this element again it has to be a HARD STOP, never a ramp.
+     --c-orange and --c-blue are tuned to the SAME OKLab lightness so that
+     neither headline word wins, and two near-opposite hues at equal
+     lightness interpolate through near-neutral. Measured, the midpoint
+     fell to 31% of the lower endpoint's chroma with more than half the
+     band's width under 60% — a desaturated mauve, a third hue, on the
+     widest element of every page. No interpolation space fixes that. */
   .band {
     position: absolute;
     inset: 0 0 auto;
     height: 4px;
-    background: linear-gradient(90deg, var(--c-blue) 0 50%, var(--c-orange) 50%);
+    background: var(--c-band);
   }
 
   /* Any control whose visual size is smaller than its hit area should
@@ -469,7 +473,7 @@
      is the one thing the colour contract at the top of this file
      forbids, and it repeats two to four times a page, which is a tic
      rather than an identity. The pair lives where it is earned — see
-     .band and .scissor. */
+     .scissor and .prose blockquote::before. */
   .index-label > .name .chev {
     background: var(--c-line-strong);
   }
@@ -929,7 +933,20 @@
     mask: var(--chev) center / contain no-repeat;
   }
   /* The pull quote is the one place the mark earns the accent: it is
-     rare, it is the author's voice, and it is a deliberate interruption. */
+     rare, it is the author's voice, and it is a deliberate interruption.
+     It carries the headline's pair, azure over tangerine, split at 50%.
+     That number is not a guess and must not be nudged: the chevron is
+     drawn symmetrically about its own gap — viewBox y 3.75-28.25, upper
+     arm ending at 14.40, lower starting at 17.60, midpoint 16.00, which
+     is exactly half — so a hard stop at 50% lands dead centre of the gap
+     and the two hues never touch. The gap is 3.13px at --chev-lg-h, so
+     there is +/-6.5% of tolerance before a hue crosses onto an arm.
+     Hard stop, not a ramp, for the reason recorded on .band.
+     One cost, known and accepted rather than overlooked: --chev is
+     CHEV_UPPER + CHEV_LOWER verbatim (asserted in check-tokens.mjs) and
+     .scissor fills those same two paths azure-over-tangerine, so at rest
+     this mark and the loader are one object at two sizes — and the
+     loader is what fires on the index row clicked to get here. */
   /* No max-width here. `em` on an element whose own font-size is 27-30px
      computes to 648-720px against a 350-592px column, so the cap never
      bound — the third inert em-cap this file has shipped, now guarded
@@ -959,7 +976,7 @@
     top: 0.2em;
     width: var(--chev-lg-w);
     height: var(--chev-lg-h);
-    background: var(--c-orange);
+    background: linear-gradient(180deg, var(--c-blue) 0 50%, var(--c-orange) 50%);
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
   }

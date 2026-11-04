@@ -384,6 +384,56 @@ for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
   )
 }
 
+// --- A duotone chevron splits in its own gap -----------------------------
+// The pull-quote mark is the chevron mask over a two-stop gradient. The stop
+// has to land in the gap between the arms or a hue crosses onto one of them,
+// which looks like a rendering fault and throws no error. The correct stop is
+// not a taste value — it is where the gap's midpoint falls in the viewBox —
+// so it is derived from the same path the mask draws rather than written
+// down. Redraw the chevron and this tells you the split moved.
+{
+  const vb = css.match(/--chev:[^;]*viewBox='([\d.\s-]+)'/)?.[1]?.trim().split(/\s+/).map(Number)
+  const d = css.match(/--chev:[^;]*d='([^']+)'/)?.[1]
+  if (!vb || !d) {
+    failures.push('could not read the chevron mask viewBox and path to derive its split')
+  } else {
+    const [, vy, , vh] = vb
+    const subpaths = d.split(/Z/i).filter((t) => /\d/.test(t))
+    const ys = subpaths.map((t) =>
+      (t.match(/-?[\d.]+/g) || []).map(Number).filter((_, i) => i % 2 === 1),
+    )
+    if (ys.length !== 2) {
+      failures.push(`the chevron path has ${ys.length} subpaths, not the 2 a split needs`)
+    } else {
+      const gapMid = (Math.max(...ys[0]) + Math.min(...ys[1])) / 2
+      const want = Math.round(((gapMid - vy) / vh) * 1000) / 10 // percent, 0.1 precision
+      for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        if (!/mask:\s*var\(--chev\)/.test(body)) continue
+        // Take the whole declaration, not a paren-bounded slice: the value
+        // contains var(--c-blue), so [^)]* stops inside it and never reaches
+        // the stop. That bug let a 45% split through the first time.
+        const bg = body.match(/background:\s*([^;]+)/)?.[1]
+        if (!bg || !/linear-gradient/.test(bg)) continue // solid fill, nothing to split
+        const name = sel.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim()
+        if (!/linear-gradient\(\s*180deg/.test(bg))
+          failures.push(
+            `${name} splits its chevron on an axis other than 180deg — the gap runs horizontally`,
+          )
+        const stops = [...bg.matchAll(/([\d.]+)%/g)].map((m) => Number(m[1]))
+        if (!stops.length) {
+          failures.push(`${name} gradient-fills a chevron mask with no stop to check`)
+          continue
+        }
+        const bad = [...new Set(stops.filter((got) => Math.abs(got - want) > 0.05))]
+        if (bad.length)
+          failures.push(
+            `${name} splits its chevron at ${bad.join('% and ')}%, but the gap's midpoint is at ${want}% — a hue will cross onto an arm`,
+          )
+      }
+    }
+  }
+}
+
 // --- Type scale ---------------------------------------------------------
 // The scale comment was wrong in three places two rounds ago and is right
 // now only because it was fixed by hand. This is the same treatment the
