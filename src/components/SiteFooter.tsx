@@ -20,7 +20,7 @@ export async function SiteFooter() {
       <span className="mr-auto max-sm:order-2 max-sm:mr-0">
         © {new Date().getFullYear()} Jacob Dubail
       </span>
-      <span className="flex items-center gap-x-7 max-sm:order-1 max-sm:col-span-2">
+      <span className="flex items-center gap-x-7 max-sm:order-1 max-sm:col-span-2 max-sm:justify-between max-sm:gap-x-4">
         {links.length ? (
           <span className="inline-flex items-center">
             {links.map((l, i) => (

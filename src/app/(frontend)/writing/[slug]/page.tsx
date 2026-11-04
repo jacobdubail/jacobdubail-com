@@ -46,7 +46,7 @@ export default function PostPage({ params }: PageProps<'/writing/[slug]'>) {
     <article className="article">
       <Link
         href="/writing"
-        className="tap group mb-14 inline-flex items-center gap-2 text-sm text-mute hover:text-fg"
+        className="tap group mb-12 inline-flex items-center gap-2 text-sm text-mute hover:text-fg"
       >
         <GappedArrow className="w-3.5 -scale-x-100 text-orange transition-transform group-hover:-translate-x-[3px]" />
         All writing
@@ -69,12 +69,13 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
   return (
     <>
       <ViewTransition name={`date-${vtKey}`} share="morph" default="none">
-        <p className="mb-4 w-fit text-sm text-faint tabular-nums">
+        <p className="article-meta text-xs leading-[1.5] text-faint tabular-nums">
           <time dateTime={post.publishedAt ?? undefined}>
             {longDate(post.publishedAt, post.archived)}
           </time>
-          {' · '}
-          {readingTime(post.content)} min read
+          <span className="max-md:before:content-['_·_'] md:block">
+            {readingTime(post.content)} min read
+          </span>
         </p>
       </ViewTransition>
       <ViewTransition name={`title-${vtKey}`} share="morph" default="none">
@@ -84,7 +85,7 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
       </ViewTransition>
 
       {post.tags?.length ? (
-        <ul className="mt-6 mb-10 flex flex-wrap gap-2">
+        <ul className="mt-5 mb-8 flex flex-wrap gap-2">
           {post.tags.map((t) => (
             <li key={t} className="chip">
               {t}
@@ -92,7 +93,7 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
           ))}
         </ul>
       ) : (
-        <div className="mb-10" />
+        <div className="mb-8" />
       )}
 
       {post.archived ? (
@@ -104,14 +105,14 @@ async function Post({ params }: Pick<PageProps<'/writing/[slug]'>, 'params'>) {
       ) : null}
 
       {post.excerpt ? (
-        <p className="mb-8 max-w-[34em] text-md leading-[1.55] text-ink2">{post.excerpt}</p>
+        <p className="mb-12 text-md leading-[1.55] text-ink2">{post.excerpt}</p>
       ) : null}
       <RichText data={post.content} />
 
       {newer || older ? (
         <nav
           aria-label="More writing"
-          className={`mt-16 grid gap-4 border-t border-line pt-7 max-sm:grid-cols-1 max-sm:gap-6 ${
+          className={`spans mt-16 grid gap-4 border-t border-line pt-7 max-sm:grid-cols-1 max-sm:gap-6 ${
             newer && older ? 'grid-cols-2' : 'grid-cols-1'
           }`}
         >

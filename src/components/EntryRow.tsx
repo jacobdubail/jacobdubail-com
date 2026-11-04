@@ -34,9 +34,7 @@ export function EntryRow({ href, vtKey, title, date, description, archived }: Pr
         ) : null}
       </span>
       <ViewTransition name={`date-${vtKey}`} share="morph" default="none">
-        <span className="entry-date w-fit text-sm whitespace-nowrap text-faint tabular-nums">
-          {date}
-        </span>
+        <span className="entry-date w-fit whitespace-nowrap text-faint tabular-nums">{date}</span>
       </ViewTransition>
     </Link>
   )

@@ -12,15 +12,16 @@ const getServerSnapshot = () => false
 
 /**
  * Light/dark switch. Follows the OS until clicked; the choice is stored per
- * browser. The visible label names the current theme rather than the
- * destination, so it cannot be misread as a status line.
+ * browser. The visible label names the current theme and the sr-only
+ * clarifier names the action, so the accessible name contains the visible
+ * label (WCAG 2.5.3). An aria-label here would win the name computation
+ * outright and silently discard the visible word.
  */
 export function ThemeToggle() {
   const dark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   return (
     <button
       type="button"
-      aria-pressed={dark}
       onClick={() => {
         const next = !dark
         document.documentElement.classList.toggle('dark', next)
@@ -29,7 +30,6 @@ export function ThemeToggle() {
         } catch {}
       }}
       className="tap cursor-pointer hover:text-fg"
-      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {dark ? 'Dark' : 'Light'}
       <span className="sr-only"> theme — switch to {dark ? 'light' : 'dark'}</span>
