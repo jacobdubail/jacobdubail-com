@@ -451,10 +451,11 @@ for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
 // as a nick in the page's top rule rather than as a joke. That is a z-index
 // ordering between two rules in this file, so it can be read here.
 // Second, each keyframe rotates the frame onto the logo's 45-degree axis
-// and then rotates the glyph back off it. Drop the counter-rotation and the
-// page still renders: the chevron just lands on horizontal and vertical and
-// becomes a crop mark, seven of which read as a stair-stepped line. Nothing
-// errors, so only a check catches it.
+// and then turns the glyph to --glyph in screen space. Drop that second
+// rotation and the page still renders: the glyph simply rides the barrel,
+// landing at whatever angle --axis happens to be. Translate after it and the
+// shot's centring swings round with --glyph. Nothing errors either way, so
+// only a check catches it.
 {
   const zOf = (sel) => {
     const body = css.match(new RegExp(`\\${sel}\\s*\\{([^{}]*)\\}`))?.[1]
@@ -501,15 +502,142 @@ for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
       const t = body.match(/transform:\s*([^;]+)/)?.[1]
       if (!t) continue // an opacity-only step is fine
       const fwd = (t.match(/rotate\(\s*var\(--axis\)\s*\)/g) || []).length
-      const back = (t.match(/rotate\(\s*calc\(\s*-1\s*\*\s*var\(--axis\)\s*\)\s*\)/g) || []).length
+      const back = (
+        t.match(/rotate\(\s*calc\(\s*var\(--glyph\)\s*-\s*var\(--axis\)\s*\)\s*\)/g) || []
+      ).length
       if (fwd !== 1 || back !== 1)
         failures.push(
-          `salvo-fly ${at} turns the frame onto the axis ${fwd} time(s) and off it ${back} — it needs exactly one of each, or the chevron rides the 45 and reads as a crop mark`,
+          `salvo-fly ${at} turns the frame onto the barrel ${fwd} time(s) and off it ${back} — it needs exactly one of each, or --dist stops measuring along the barrel and the glyph lands at an angle nobody chose`,
         )
-      else if (t.indexOf('calc(-1 * var(--axis))') < t.indexOf('rotate(var(--axis))'))
+      else if (t.indexOf('calc(var(--glyph) - var(--axis))') < t.indexOf('rotate(var(--axis))'))
         failures.push(
-          `salvo-fly ${at} undoes the axis rotation before applying it, so --dist no longer measures along the barrel`,
+          `salvo-fly ${at} leaves the barrel's frame before it enters it, so --dist no longer measures along the barrel`,
         )
+      // The glyph is placed by rotation alone. Anything translated after
+      // that second rotation rides inside it and swings round with --glyph,
+      // so centring belongs on the element, not in the keyframes.
+      else if (/rotate\([^)]*var\(--glyph\)[\s\S]*?\)\s*translate/.test(t))
+        failures.push(
+          `salvo-fly ${at} translates after the glyph rotation — that offset swings with --glyph; centre the shot with a margin instead`,
+        )
+    }
+  }
+}
+
+// --- The shot is the logo's own mark ------------------------------------
+// --glyph says the salvo's chevron is turned to the orientation of the mark
+// at the top of the logo. That is a claim about two path strings in two
+// different files, so it is re-derived here from both rather than trusted.
+// The method is the same either side. A chevron arm and a logo arm are both
+// parallelograms, so the axis of each is the direction of its longest edge,
+// and the sign is fixed by pointing it away from the other arm — which is
+// what makes this pin one rotation rather than the four an undirected axis
+// would allow. Redraw either path and this says where --glyph moved to.
+{
+  const LOGOSRC = join(dirname(fileURLToPath(import.meta.url)), '../src/components/logo-path.ts')
+  const logoSrc = readFileSync(LOGOSRC, 'utf8')
+  const logoD = logoSrc.match(/LOGO_PATH\s*=\s*\n?\s*'([^']+)'/)?.[1]
+  const logoVb = logoSrc
+    .match(/LOGO_VIEWBOX\s*=\s*'([^']+)'/)?.[1]
+    ?.trim()
+    .split(/\s+/)
+    .map(Number)
+  const chevD = css.match(/--chev:[^;]*d='([^']+)'/)?.[1]
+  // From the rule body, not the file: the comment above it names 0deg as the
+  // way back to an upright glyph, and a bare search finds that first.
+  const shotBody = css
+    .match(/\.salvo-shot\s*\{([\s\S]*?)\n  \}/)?.[1]
+    ?.replace(/\/\*[\s\S]*?\*\//g, '')
+  const glyph = shotBody?.match(/--glyph:\s*(-?[\d.]+)deg/)?.[1]
+
+  // Points in order, tagged with the command that produced them, so a curve's
+  // control points are never mistaken for a straight edge.
+  const parse = (sp) => {
+    const pts = []
+    for (const m of sp.matchAll(/([MLCZ])([^MLCZ]*)/g)) {
+      const n = (m[2].match(/-?\d*\.?\d+/g) || []).map(Number)
+      for (let i = 0; i + 1 < n.length; i += 2) pts.push({ c: m[1], x: n[i], y: n[i + 1] })
+    }
+    return pts
+  }
+  const longestEdge = (pts) => {
+    let best = -1
+    let v = null
+    for (let i = 1; i < pts.length; i++) {
+      if (pts[i].c !== 'L') continue // only an L segment is known straight
+      const dx = pts[i].x - pts[i - 1].x
+      const dy = pts[i].y - pts[i - 1].y
+      const len = Math.hypot(dx, dy)
+      if (len > best) [best, v] = [len, [dx, dy]]
+    }
+    return v
+  }
+  const mid = (pts) => [
+    pts.reduce((a, q) => a + q.x, 0) / pts.length,
+    pts.reduce((a, q) => a + q.y, 0) / pts.length,
+  ]
+  // Degrees, y-up, in [0,360): the arm's axis pointed away from its partner.
+  const outward = (pts, other) => {
+    const v = longestEdge(pts)
+    if (!v) return null
+    const a = mid(pts)
+    const b = mid(other)
+    const away = [a[0] - b[0], a[1] - b[1]]
+    const sign = v[0] * away[0] + v[1] * away[1] >= 0 ? 1 : -1
+    return ((Math.atan2(-sign * v[1], sign * v[0]) * 180) / Math.PI + 360) % 360
+  }
+  const pair = (two) => [outward(two[0], two[1]), outward(two[1], two[0])]
+  const split = (d) => d.split(/Z/i).filter((t) => /\d/.test(t))
+
+  if (!logoD || !logoVb || !chevD || glyph === undefined) {
+    failures.push(
+      'could not read the logo path, its viewBox, the chevron mask and --glyph together',
+    )
+  } else {
+    const [vw, vh] = [logoVb[2], logoVb[3]]
+    // The mark is whichever subpaths sit wholly in the logo's top-right.
+    const marks = split(logoD)
+      .map(parse)
+      .filter((pts) => {
+        const xs = pts.map((q) => q.x)
+        const ys = pts.map((q) => q.y)
+        return Math.min(...xs) >= 0.6 * vw && Math.max(...ys) <= 0.35 * vh
+      })
+    const arms = split(chevD).map(parse)
+    if (marks.length !== 2 || arms.length !== 2) {
+      failures.push(
+        `the logo's top-right holds ${marks.length} subpath(s) and --chev has ${arms.length} arm(s) — both have to be two for --glyph to mean anything`,
+      )
+    } else {
+      const markAx = pair(marks)
+      const chevAx = pair(arms)
+      if ([...markAx, ...chevAx].includes(null)) {
+        failures.push('an arm of the mark or the chevron has no straight edge to take an axis from')
+      } else {
+        const norm = (x) => ((x % 360) + 360) % 360
+        const close = (x, y) => Math.abs(norm(x - y + 180) - 180) < 2
+        // Try both ways of pairing chevron arm to mark arm; a turn that maps
+        // one pair has to map the other too, or it is not a rigid rotation.
+        const fits = [0, 1]
+          .map((k) => [k, norm(markAx[0] - chevAx[k])])
+          .filter(
+            ([k, t]) => close(chevAx[k] + t, markAx[0]) && close(chevAx[1 - k] + t, markAx[1]),
+          )
+          .map(([, t]) => {
+            const css = norm(-t) // CSS rotate() turns clockwise on screen
+            return css > 180 ? css - 360 : css
+          })
+        const want = [...new Set(fits.map((r) => Math.round(r)))]
+        const got = Number(glyph)
+        if (!want.length)
+          failures.push(
+            `no rotation maps --chev's arms (${chevAx.map((a) => a.toFixed(0)).join('/')}deg) onto the logo mark's (${markAx.map((a) => a.toFixed(0)).join('/')}deg) — the two are no longer the same figure, so --glyph cannot quote it`,
+          )
+        else if (!want.some((r) => Math.abs(r - got) < 2))
+          failures.push(
+            `--glyph is ${got}deg, but --chev's arms (${chevAx.map((a) => a.toFixed(0)).join('/')}deg) land on the logo mark's (${markAx.map((a) => a.toFixed(0)).join('/')}deg) only at ${want.join('deg / ')}deg — the shot has stopped being the logo's own mark`,
+          )
+      }
     }
   }
 }

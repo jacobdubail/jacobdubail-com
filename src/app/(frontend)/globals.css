@@ -322,8 +322,9 @@
        a nick in the rule -- a bug, not a joke. Occluding also means the
        flight needs no headroom arithmetic: the band is the top of the
        page on every viewport, so the shot always ends on the same edge.
-       Measured over six mid-volley frames: with this, zero pixels of the
-       4px rule are any colour but the rule's; without it, 83. The skip
+       Measured at the exact frame a shot overlaps the rule, at 390, 720 and
+       1440 in both themes: with this, zero pixels of the rule are any
+       colour but the rule's; without it, 45 at 1440 light. The skip
        link is the only other thing that can paint near the top and it
        sits 12px down at z-10, clear of these 4px. Asserted in
        check-tokens.mjs. */
@@ -347,15 +348,19 @@
     position: relative;
     display: inline-flex;
   }
-  /* A zero-size origin pinned to the right end of the logo's upper bar, so
-     each shot is placed by its own transform and nothing depends on this
-     box's size. 24.5% is that bar's vertical centre in the 290x280 viewBox
-     (it spans y 54-83), which is the muzzle the 45-degree axis points out
-     of. Measured at the rendered 26px logo, not guessed from the drawing. */
+  /* A zero-size origin at the logo's top-right corner, so each shot is
+     placed by its own transform and nothing depends on this box's size.
+     97%/0 is not the box corner rounded off, it is derived. The mark at
+     the top of the logo is the tittle and the upper bar with a 45-degree
+     channel between them; in the 290x280 viewBox the tittle's cut runs
+     y = -x + 260 and the bar's y = -x + 303, so the channel's centreline
+     is y = -x + 281.3 and it leaves the top edge at x = 281.3, which is
+     97% of the way across. The volley comes out of the logo's own gap,
+     on the gap's own axis, at the corner where it ends. */
   .salvo {
     position: absolute;
-    left: 100%;
-    top: 24.5%;
+    left: 97%;
+    top: 0%;
     width: 0;
     height: 0;
     z-index: 1;
@@ -367,26 +372,43 @@
     top: 0;
     width: var(--chev-md-w);
     height: var(--chev-md-h);
+    /* Centre the glyph on its origin here, not with a translate in the
+       keyframes. A translate would sit inside --glyph's rotation and swing
+       round with it; a margin is screen-space and holds still. What flies
+       is the shot's centre, at any angle. */
+    margin-left: calc(var(--chev-md-w) / -2);
+    margin-top: calc(var(--chev-md-h) / -2);
     background: var(--c-blue);
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
-    /* The logo is cut at 45 degrees in four places -- the bowl's foot, the
-       tittle, the stem and the upper bar -- so the volley leaves on that
-       axis rather than straight out to the right. Every keyframe below
-       reads rotate(axis) translate(...) rotate(-axis): the first rotation
-       turns the frame, so --dist is distance along the barrel and --spread
-       is sideways off it, and the second turns the glyph back upright.
-       The glyph does NOT ride the axis, and that is deliberate. A chevron
-       is two arms at +/-45 degrees; rotate it 45 and they land exactly on
-       horizontal and vertical, which is the silhouette of a crop mark, a
-       resize handle, a bracket -- seven of them climbing a diagonal read
-       as a stair-stepped line that failed to antialias, not as a volley.
-       Rendered and compared at 3x against three alternatives. Upright, the
-       chevron's upper arm already sits at -45, parallel to the flight
-       path, so the shot reads as a dart with its tail swept off the line.
-       Set --axis: 0deg and the whole thing reverts to the due-east volley
-       this replaced; nothing else needs touching. */
+    /* Two angles, kept apart on purpose.
+       --axis is the barrel. The logo is cut at 45 degrees in four places
+       -- the bowl's foot, the tittle, the stem and the upper bar -- so the
+       volley leaves on that axis rather than straight out to the right.
+       Every keyframe reads rotate(axis) translate(...) rotate(glyph-axis):
+       the first turn puts the frame on the barrel, so --dist is distance
+       along it and --spread is sideways off it; the second lands the glyph
+       at --glyph in screen space whatever the barrel is doing.
+       --glyph is 135 because that is the orientation of the mark at the
+       top of the logo, derived rather than eyeballed. The tittle and the
+       upper bar are one vertical arm and one horizontal arm with 45-degree
+       cut faces across a diagonal gap, which is --chev's own construction.
+       Taking each arm's longest edge and pointing it away from its
+       partner, the mask's arms run at 135 and 225 degrees and the logo's
+       at 0 and 90, and exactly one turn maps the pair onto the pair: 135.
+       check-tokens.mjs recomputes that from both path strings, so this is
+       checked rather than asserted, and it moves if either path is redrawn.
+       The apex therefore TRAILS. The shot opens toward where it is going
+       instead of pointing at it, which is a real cost and the author's call
+       over a 3-0 council vote for an upright glyph. The council's argument
+       was that a chevron turned onto the 45 reads as a crop mark; it reads
+       as the logo's own mark instead, which is what none of us could see
+       until the mark itself had been measured.
+       --axis: 0deg still gives the due-east volley this replaced. There is
+       no equivalent switch for the glyph: any other --glyph is a different
+       claim about the logo, and the guard will say so. */
     --axis: -45deg;
+    --glyph: 135deg;
     /* --i is set per shot in LogoSalvo.tsx. The fan is derived from it so
        the shot count can change in one place: (i - (n-1)/2) centres the
        spread on the muzzle whatever n is, and 3 is (7-1)/2.
@@ -428,17 +450,22 @@
      a larger root font, anything that puts more sky above the logo. */
   @keyframes salvo-fly {
     from {
-      transform: rotate(var(--axis)) translate(2px, 0) rotate(calc(-1 * var(--axis)))
-        translate(0, -50%) scale(0.4);
+      transform: rotate(var(--axis)) translate(2px, 0) rotate(calc(var(--glyph) - var(--axis)))
+        scale(0.4);
       opacity: 0;
     }
     /* The muzzle. Scale and opacity both resolve here, and the translate is
-       14% of the way so travel stays linear across the whole flight —
-       interpolating scale over the full distance made the shots grow as
-       they receded, which is backwards. */
-    14% {
-      transform: rotate(var(--axis)) translate(calc(var(--dist) * 0.14), calc(var(--spread) * 0.14))
-        rotate(calc(-1 * var(--axis))) translate(0, -50%) scale(1);
+       the same fraction of the way so travel stays linear across the whole
+       flight — interpolating scale over the full distance made the shots
+       grow as they receded, which is backwards.
+       6%, not the 14% this ran at first. 14% of 148px is 20.7px, which is
+       four fifths of a 26px logo: the shot finished fading in a whole logo
+       away from the corner and read as appearing out of nothing nearby.
+       6% is 8.9px and the shot is at full strength while it is still on
+       the mark it came from. */
+    6% {
+      transform: rotate(var(--axis)) translate(calc(var(--dist) * 0.06), calc(var(--spread) * 0.06))
+        rotate(calc(var(--glyph) - var(--axis))) scale(1);
       opacity: 1;
     }
     70% {
@@ -446,7 +473,7 @@
     }
     to {
       transform: rotate(var(--axis)) translate(var(--dist), var(--spread))
-        rotate(calc(-1 * var(--axis))) translate(0, -50%) scale(1);
+        rotate(calc(var(--glyph) - var(--axis))) scale(1);
       opacity: 0;
     }
   }
