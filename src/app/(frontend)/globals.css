@@ -318,6 +318,88 @@
     background: var(--c-band);
   }
 
+  /* --- The logo's salvo. Shift, Shift, Shift. ---
+     The only purely decorative thing in this file, and it still obeys the
+     rules: one shape (--chev, the same mask everything else uses) and the
+     two hues alternating, so even the joke is made of parts that already
+     exist. Nothing here reaches outside the logo's own box.
+     The mount is the positioning context for the shots. Its display value
+     is NOT doing layout work, whatever it looks like: the mount is a flex
+     item of the nav's Link, so the used display is blockified no matter
+     what is written here. Measured, inline-flex, inline-block and plain
+     inline all give the same 25.09px header. It says inline-flex because
+     that is what a box wrapping one svg should say, not because the nav
+     depends on it. */
+  .salvo-mount {
+    position: relative;
+    display: inline-flex;
+  }
+  /* A zero-size origin pinned to the logo's right edge, so each shot is
+     placed by its own transform and nothing depends on this box's size. */
+  .salvo {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .salvo-shot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--chev-md-w);
+    height: var(--chev-md-h);
+    background: var(--c-blue);
+    -webkit-mask: var(--chev) center / contain no-repeat;
+    mask: var(--chev) center / contain no-repeat;
+    /* --i is set per shot in LogoSalvo.tsx. The fan is derived from it so
+       the shot count can change in one place: (i - (n-1)/2) centres the
+       spread on the muzzle whatever n is, and 3 is (7-1)/2.
+       The fan is deliberately shallow. At +/-21px over ~140px of travel
+       the shots stacked into a near-vertical streak and read as scatter;
+       at +/-10px they read as a volley leaving the logo. */
+    --spread: calc((var(--i) - 3) * 3.4px);
+    --dist: 148px;
+    /* linear, and every shot travels the same distance, because anything
+       else bunches them. Ease-out plus a per-shot distance that grew with
+       --i let the late shots catch the decelerating early ones and pile
+       into a clump halfway across. Constant speed and constant distance
+       hold the stagger's spacing all the way out: one shot every 58ms is
+       one shot every ~14px, start to finish. */
+    animation: salvo-fly 0.6s linear forwards;
+    animation-delay: calc(var(--i) * 58ms);
+    opacity: 0;
+  }
+  .salvo-shot:nth-child(even) {
+    background: var(--c-orange);
+  }
+  /* Opacity holds through most of the flight and drops at the end. Fading
+     linearly from the muzzle made every shot half-transparent for most of
+     its travel, which read as washed out rather than fast. */
+  @keyframes salvo-fly {
+    from {
+      transform: translate(2px, -50%) scale(0.4);
+      opacity: 0;
+    }
+    /* The muzzle. Scale and opacity both resolve here, and the translate is
+       14% of the way so travel stays linear across the whole flight —
+       interpolating scale over the full distance made the shots grow as
+       they receded, which is backwards. */
+    14% {
+      transform: translate(calc(var(--dist) * 0.14), calc(-50% + var(--spread) * 0.14)) scale(1);
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    to {
+      transform: translate(var(--dist), calc(-50% + var(--spread))) scale(1);
+      opacity: 0;
+    }
+  }
+
   /* Any control whose visual size is smaller than its hit area should
      claim the difference back with margin, so the rhythm is unchanged. */
   /* Blockified on purpose: vertical padding and negative margin do

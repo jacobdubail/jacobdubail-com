@@ -614,7 +614,7 @@ for (const [, selector, body] of css.matchAll(/([^\n{}]+)\{([^{}]*)\}/g)) {
 // shifted the h1 144px off the one left edge the layout is built on.
 {
   const OURS =
-    /^(page|index|entry|chip|prose|chev|tap|ext|band|article|scissor|headline|spans|name)(-|$)/
+    /^(page|index|entry|chip|prose|chev|tap|ext|band|article|scissor|headline|spans|name|salvo)(-|$)/
   const srcRoot = join(dirname(fileURLToPath(import.meta.url)), '../src')
   const seen = new Set()
   for (const file of walkTsx(srcRoot))
