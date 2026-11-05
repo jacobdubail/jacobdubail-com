@@ -378,7 +378,10 @@ for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
   if (!ls || Number(ls[1]) < TRACK_FLOOR) continue
   if (!inABox(sel, body)) continue
   if (new RegExp(`padding-right:\\s*calc\\([^)]*-\\s*${ls[1]}em`).test(body)) continue
-  const name = sel.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim()
+  const name = sel
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
   failures.push(
     `${name} letterspaces uppercase at ${ls[1]}em inside a padded box but never gives the trailing space back — it leans left`,
   )
@@ -392,7 +395,11 @@ for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
 // so it is derived from the same path the mask draws rather than written
 // down. Redraw the chevron and this tells you the split moved.
 {
-  const vb = css.match(/--chev:[^;]*viewBox='([\d.\s-]+)'/)?.[1]?.trim().split(/\s+/).map(Number)
+  const vb = css
+    .match(/--chev:[^;]*viewBox='([\d.\s-]+)'/)?.[1]
+    ?.trim()
+    .split(/\s+/)
+    .map(Number)
   const d = css.match(/--chev:[^;]*d='([^']+)'/)?.[1]
   if (!vb || !d) {
     failures.push('could not read the chevron mask viewBox and path to derive its split')
@@ -414,7 +421,10 @@ for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
         // the stop. That bug let a 45% split through the first time.
         const bg = body.match(/background:\s*([^;]+)/)?.[1]
         if (!bg || !/linear-gradient/.test(bg)) continue // solid fill, nothing to split
-        const name = sel.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').trim()
+        const name = sel
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
         if (!/linear-gradient\(\s*180deg/.test(bg))
           failures.push(
             `${name} splits its chevron on an axis other than 180deg — the gap runs horizontally`,
@@ -430,6 +440,76 @@ for (const [, sel, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
             `${name} splits its chevron at ${bad.join('% and ')}%, but the gap's midpoint is at ${want}% — a hue will cross onto an arm`,
           )
       }
+    }
+  }
+}
+
+// --- The volley flies under the top band, and upright ---------------------
+// Two things about the salvo are load-bearing and silent when broken.
+// First, the band has to paint over the shots. If it does not, the shot in
+// the band's own hue half-dissolves into it and leaves a stub, which reads
+// as a nick in the page's top rule rather than as a joke. That is a z-index
+// ordering between two rules in this file, so it can be read here.
+// Second, each keyframe rotates the frame onto the logo's 45-degree axis
+// and then rotates the glyph back off it. Drop the counter-rotation and the
+// page still renders: the chevron just lands on horizontal and vertical and
+// becomes a crop mark, seven of which read as a stair-stepped line. Nothing
+// errors, so only a check catches it.
+{
+  const zOf = (sel) => {
+    const body = css.match(new RegExp(`\\${sel}\\s*\\{([^{}]*)\\}`))?.[1]
+    if (body === undefined) return null
+    const z = body.match(/z-index:\s*(-?\d+)/)?.[1]
+    return z === undefined ? undefined : Number(z)
+  }
+  const bandZ = zOf('.band')
+  const salvoZ = zOf('.salvo')
+  if (bandZ === null || salvoZ === null) {
+    failures.push('could not find .band and .salvo to check which paints over which')
+  } else if (bandZ === undefined) {
+    failures.push(
+      '.band declares no z-index, so the salvo paints over the page’s top rule and nicks it',
+    )
+  } else if (salvoZ === undefined || !(bandZ > salvoZ)) {
+    failures.push(
+      `.band is at z-index ${bandZ} and .salvo at ${salvoZ ?? 'auto'} — the band has to be above, or a shot in its own hue leaves a stub on it`,
+    )
+  }
+
+  // Brace-counted, not a lazy regex. `[\s\S]*?\n\s*\}` stops at the FIRST
+  // step's closing brace, so the guard saw only `from` and sat silent while
+  // the other steps were broken. Caught by mutating a later step.
+  const open = css.search(/@keyframes\s+salvo-fly\s*\{/)
+  let frames = null
+  if (open !== -1) {
+    let i = css.indexOf('{', open)
+    let depth = 0
+    for (let j = i; j < css.length; j++) {
+      if (css[j] === '{') depth++
+      else if (css[j] === '}' && --depth === 0) {
+        frames = css.slice(i + 1, j)
+        break
+      }
+    }
+  }
+  if (!frames) {
+    failures.push('could not find the salvo-fly keyframes to check the glyph stays upright')
+  } else {
+    const steps = [...frames.matchAll(/(from|to|[\d.]+%)\s*\{([^{}]*)\}/g)]
+    if (!steps.length) failures.push('salvo-fly has no keyframe steps')
+    for (const [, at, body] of steps) {
+      const t = body.match(/transform:\s*([^;]+)/)?.[1]
+      if (!t) continue // an opacity-only step is fine
+      const fwd = (t.match(/rotate\(\s*var\(--axis\)\s*\)/g) || []).length
+      const back = (t.match(/rotate\(\s*calc\(\s*-1\s*\*\s*var\(--axis\)\s*\)\s*\)/g) || []).length
+      if (fwd !== 1 || back !== 1)
+        failures.push(
+          `salvo-fly ${at} turns the frame onto the axis ${fwd} time(s) and off it ${back} — it needs exactly one of each, or the chevron rides the 45 and reads as a crop mark`,
+        )
+      else if (t.indexOf('calc(-1 * var(--axis))') < t.indexOf('rotate(var(--axis))'))
+        failures.push(
+          `salvo-fly ${at} undoes the axis rotation before applying it, so --dist no longer measures along the barrel`,
+        )
     }
   }
 }

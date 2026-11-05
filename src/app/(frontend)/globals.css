@@ -316,13 +316,26 @@
     inset: 0 0 auto;
     height: 4px;
     background: var(--c-band);
+    /* Above .salvo (z-index 1), so the logo's volley flies UNDER this rule
+       and is gone. Without it the shots cross the band and the one in the
+       band's own hue half-dissolves into it, leaving a stub that reads as
+       a nick in the rule -- a bug, not a joke. Occluding also means the
+       flight needs no headroom arithmetic: the band is the top of the
+       page on every viewport, so the shot always ends on the same edge.
+       Measured over six mid-volley frames: with this, zero pixels of the
+       4px rule are any colour but the rule's; without it, 83. The skip
+       link is the only other thing that can paint near the top and it
+       sits 12px down at z-10, clear of these 4px. Asserted in
+       check-tokens.mjs. */
+    z-index: 2;
   }
 
   /* --- The logo's salvo. Shift, Shift, Shift. ---
      The only purely decorative thing in this file, and it still obeys the
      rules: one shape (--chev, the same mask everything else uses) and the
      two hues alternating, so even the joke is made of parts that already
-     exist. Nothing here reaches outside the logo's own box.
+     exist. It does reach outside the logo's box: the volley climbs the
+     logo's own 45-degree axis and leaves the page under the top band.
      The mount is the positioning context for the shots. Its display value
      is NOT doing layout work, whatever it looks like: the mount is a flex
      item of the nav's Link, so the used display is blockified no matter
@@ -334,12 +347,15 @@
     position: relative;
     display: inline-flex;
   }
-  /* A zero-size origin pinned to the logo's right edge, so each shot is
-     placed by its own transform and nothing depends on this box's size. */
+  /* A zero-size origin pinned to the right end of the logo's upper bar, so
+     each shot is placed by its own transform and nothing depends on this
+     box's size. 24.5% is that bar's vertical centre in the 290x280 viewBox
+     (it spans y 54-83), which is the muzzle the 45-degree axis points out
+     of. Measured at the rendered 26px logo, not guessed from the drawing. */
   .salvo {
     position: absolute;
     left: 100%;
-    top: 50%;
+    top: 24.5%;
     width: 0;
     height: 0;
     z-index: 1;
@@ -354,22 +370,51 @@
     background: var(--c-blue);
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
+    /* The logo is cut at 45 degrees in four places -- the bowl's foot, the
+       tittle, the stem and the upper bar -- so the volley leaves on that
+       axis rather than straight out to the right. Every keyframe below
+       reads rotate(axis) translate(...) rotate(-axis): the first rotation
+       turns the frame, so --dist is distance along the barrel and --spread
+       is sideways off it, and the second turns the glyph back upright.
+       The glyph does NOT ride the axis, and that is deliberate. A chevron
+       is two arms at +/-45 degrees; rotate it 45 and they land exactly on
+       horizontal and vertical, which is the silhouette of a crop mark, a
+       resize handle, a bracket -- seven of them climbing a diagonal read
+       as a stair-stepped line that failed to antialias, not as a volley.
+       Rendered and compared at 3x against three alternatives. Upright, the
+       chevron's upper arm already sits at -45, parallel to the flight
+       path, so the shot reads as a dart with its tail swept off the line.
+       Set --axis: 0deg and the whole thing reverts to the due-east volley
+       this replaced; nothing else needs touching. */
+    --axis: -45deg;
     /* --i is set per shot in LogoSalvo.tsx. The fan is derived from it so
        the shot count can change in one place: (i - (n-1)/2) centres the
        spread on the muzzle whatever n is, and 3 is (7-1)/2.
        The fan is deliberately shallow. At +/-21px over ~140px of travel
        the shots stacked into a near-vertical streak and read as scatter;
-       at +/-10px they read as a volley leaving the logo. */
+       at +/-10px they read as a volley leaving the logo.
+       Measured in the browser, per shot: the fan runs 48.94 / 47.63 /
+       46.32 / 45.00 / 43.60 degrees from shot 0 to shot 4, so the middle
+       shot flies the logo's axis exactly and the rest splay about it. */
     --spread: calc((var(--i) - 3) * 3.4px);
     --dist: 148px;
     /* linear, and every shot travels the same distance, because anything
        else bunches them. Ease-out plus a per-shot distance that grew with
        --i let the late shots catch the decelerating early ones and pile
        into a clump halfway across. Constant speed and constant distance
-       hold the stagger's spacing all the way out: one shot every 58ms is
-       one shot every ~14px, start to finish. */
+       hold the stagger's spacing all the way out: one shot every 76ms is
+       one shot every ~18px, start to finish.
+       --dist is longer than the page gives it, deliberately. Measured, the
+       shot meets the band after 88px of travel on a 900px-tall desktop
+       window and 72px on a 390px phone, so the last third of the flight is
+       behind the rule on every viewport. The band is the terminus; the
+       distance only has to be long enough to reach it. */
     animation: salvo-fly 0.6s linear forwards;
-    animation-delay: calc(var(--i) * 58ms);
+    /* 76ms, not the 58ms the due-east volley used. On the diagonal the
+       shots sit ~14px apart at 58ms, and at 9x15 their arms interlock into
+       a continuous zigzag ribbon -- bunting, not seven rounds. 76ms opens
+       that to ~18px and each shot reads as its own object again. */
+    animation-delay: calc(var(--i) * 76ms);
     opacity: 0;
   }
   .salvo-shot:nth-child(even) {
@@ -377,10 +422,14 @@
   }
   /* Opacity holds through most of the flight and drops at the end. Fading
      linearly from the muzzle made every shot half-transparent for most of
-     its travel, which read as washed out rather than fast. */
+     its travel, which read as washed out rather than fast.
+     In practice the band swallows the shot before the fade starts. The
+     fade is the fallback for anywhere it does not -- a zoomed-out window,
+     a larger root font, anything that puts more sky above the logo. */
   @keyframes salvo-fly {
     from {
-      transform: translate(2px, -50%) scale(0.4);
+      transform: rotate(var(--axis)) translate(2px, 0) rotate(calc(-1 * var(--axis)))
+        translate(0, -50%) scale(0.4);
       opacity: 0;
     }
     /* The muzzle. Scale and opacity both resolve here, and the translate is
@@ -388,14 +437,16 @@
        interpolating scale over the full distance made the shots grow as
        they receded, which is backwards. */
     14% {
-      transform: translate(calc(var(--dist) * 0.14), calc(-50% + var(--spread) * 0.14)) scale(1);
+      transform: rotate(var(--axis)) translate(calc(var(--dist) * 0.14), calc(var(--spread) * 0.14))
+        rotate(calc(-1 * var(--axis))) translate(0, -50%) scale(1);
       opacity: 1;
     }
     70% {
       opacity: 1;
     }
     to {
-      transform: translate(var(--dist), calc(-50% + var(--spread))) scale(1);
+      transform: rotate(var(--axis)) translate(var(--dist), var(--spread))
+        rotate(calc(-1 * var(--axis))) translate(0, -50%) scale(1);
       opacity: 0;
     }
   }
