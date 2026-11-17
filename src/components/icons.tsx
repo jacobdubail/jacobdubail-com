@@ -17,11 +17,14 @@ export function Logo({ className, title }: IconProps) {
   )
 }
 
+export const ARROW_PATH =
+  'M2.00 13.70L17.59 13.70L17.59 18.30L6.60 18.30ZM29.00 16.00L18.00 5.00L14.75 8.25L22.49 16.00L14.75 23.75L18.00 27.00Z'
+
 /** Shaft with the logo's 45° tail, a small break, then the head. Hover + back links. */
 export function GappedArrow({ className }: IconProps) {
   return (
     <svg viewBox="0 0 32 32" fill="currentColor" className={className} aria-hidden>
-      <path d="M2.00 13.70L17.59 13.70L17.59 18.30L6.60 18.30ZM29.00 16.00L18.00 5.00L14.75 8.25L22.49 16.00L14.75 23.75L18.00 27.00Z" />
+      <path d={ARROW_PATH} />
     </svg>
   )
 }

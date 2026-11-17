@@ -5,15 +5,17 @@ import type { ReactNode } from 'react'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteNav } from '@/components/SiteNav'
 import { themeScript } from '@/components/ThemeToggle'
+import { card } from '@/content/card'
 import { siteName, siteUrl } from '@/lib/site'
 
 import './globals.css'
 
-const inter = localFont({
-  src: '../../fonts/Inter.woff2',
-  variable: '--font-inter',
+const franklin = localFont({
+  src: '../../fonts/LibreFranklin.woff2',
+  variable: '--font-franklin',
   weight: '100 900',
   display: 'swap',
+  adjustFontFallback: 'Arial',
 })
 const fraunces = localFont({
   src: '../../fonts/Fraunces.woff2',
@@ -30,18 +32,22 @@ const jetbrains = localFont({
   preload: false,
 })
 
+/**
+ * One page, so no title template and no feed link: the template never
+ * fires with nothing to nest under it, and advertising an RSS feed that
+ * redirects to the home page is worse than advertising none. Both come
+ * back with /writing.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: siteName, template: `%s · ${siteName}` },
-  description:
-    'Engineering operations and hiring at Fueled. Writing about hiring, team process, and the tools that make product teams faster.',
-  alternates: { types: { 'application/rss+xml': '/feed.xml' } },
-  openGraph: { siteName, type: 'website' },
+  description: card.intro,
+  openGraph: { siteName, type: 'website', title: siteName, description: card.intro },
 }
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: light)', color: '#fdfcfa' },
     { media: '(prefers-color-scheme: dark)', color: '#101318' },
   ],
 }
@@ -50,7 +56,7 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable}`}
+      className={`${franklin.variable} ${fraunces.variable} ${jetbrains.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -64,7 +70,7 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <div className="band" aria-hidden />
-        <div className="mx-auto max-w-[784px] px-6 pt-13 pb-16 max-[900px]:px-8 max-sm:px-5 max-sm:pt-11 max-sm:pb-12">
+        <div className="mx-auto max-w-[784px] px-6 pt-[var(--gap-top)] pb-[var(--gap-bottom)] max-lg:px-8 max-sm:px-5">
           <SiteNav />
           <main id="main">{children}</main>
           <SiteFooter />

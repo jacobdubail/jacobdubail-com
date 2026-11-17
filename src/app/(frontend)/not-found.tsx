@@ -10,7 +10,8 @@ export default function NotFound() {
         Nothing at this address.
       </h1>
       <p className="mb-8 text-ink2">
-        It may have moved when the site left WordPress. Try the writing or project lists.
+        The writing and project archives are off the air while this site is one page. Everything
+        that is here is on the front page.
       </p>
       <Link
         href="/"

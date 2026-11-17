@@ -5,38 +5,94 @@
 
 /* ------------------------------------------------------------------ *
  * Design tokens
- * Light: tangerine band, azure + tangerine highlights.
- * Dark:  azure band.
- * "faint" is tuned to pass WCAG AA (4.5:1) for small text.
+ *
+ * Colour roles. The palette is two hues and no more:
+ *   tangerine (--c-orange / --c-orange-text) = you can act on this.
+ *     Links, the active nav item, hover and motion marks.
+ *   azure (--c-blue) = the system is talking back.
+ *     Focus ring, selection, the archive note's rule.
+ * Decorative marks (list bullets, rules, separators) are neutral at rest
+ * and only take an accent when they signal state.
+ *
+ * Three things use the hues as identity rather than as meaning: the
+ * headline's two accent words, the ScissorLoader, and the pull quote's
+ * mark. All three run them in the same order, azure then tangerine.
+ * The band is NOT one of them. It ran the pair for one pass and was
+ * reverted to a single hue per theme; see .band for the measurement that
+ * pass produced, which is worth keeping even though the treatment was not.
+ * The index label's chevron is not one of them either — it carried the
+ * pair even more briefly, and see .index-label for why it lost it.
+ * An earlier revision gave the accent words a separate --c-head-* pair so
+ * they would not drag the functional accents off their jobs. That pair could not be told apart from the tokens it was
+ * meant to differ from (ΔE 0.009 from --c-blue in dark), and a palette
+ * cannot support five accents across two hues. So the hues are used
+ * directly, and the thing that was actually wanted — a headline with no
+ * winning word — is bought by tuning --c-orange and --c-blue to the same
+ * OKLab lightness instead. Context, not colour, is what keeps a 46px
+ * serif accent word from reading as a 17px underlined link.
+ *
+ * Neutrals are one warm family in light and one cool family in dark.
+ *
+ * Contrast contract, in two tiers:
+ *   Every token set at body size clears 4.5:1 on BOTH --c-bg and
+ *   --c-soft, so any such token is safe on any surface.
+ *   --c-orange and --c-blue are mark, display and focus-ring colours,
+ *   never body text, and are held to the 3:1 non-text floor instead. --c-line-strong is
+ *   an object boundary and is also held to 3:1 on both surfaces.
+ *
+ * One deliberate asymmetry: light's ink2/mute/faint sit 1.92x / 3.02x /
+ * 3.40x below fg, and dark's sit 1.91x / 2.40x / 2.69x. Matching them
+ * exactly would put dark --c-faint below the AA floor on --c-soft. Dark
+ * has less room beneath its foreground before that floor, so the ramp is
+ * compressed rather than the floor broken. ink2 matches to 0.01x, and
+ * faint keeps ~0.2 of headroom over the AA floor on --c-soft rather than
+ * sitting exactly on it.
+ *
+ * Two light tokens sit close to their floors on --c-soft: --c-faint at
+ * 4.56 against 4.5, and --c-line-strong at 3.06 against 3.0. Darkening
+ * --c-soft again would break both, so move them in the same commit.
+ *
+ * Every number in this block is checked by scripts/check-tokens.mjs,
+ * which `pnpm lint` and `vercel-build` both run, so drift fails before it
+ * ships. Do not hand-edit the ratios — move a value and re-run
+ * `pnpm check:tokens --print`. The guard reads the figures out of this
+ * comment, so the sentences above are the thing under test.
  * ------------------------------------------------------------------ */
+/* @tokens light */
 :root {
-  --c-bg: #ffffff;
+  --c-bg: #fdfcfa;
   --c-fg: #17150f;
-  --c-ink2: #4d4840;
-  --c-mute: #6e6a63;
-  --c-faint: #7a756d;
-  --c-line: #ebe8e3;
-  --c-soft: #f6f4f0;
-  --c-orange: #e05c1f; /* Tangerine: marks, large type, band */
-  --c-orange-text: #c5511b; /* Tangerine for small text (4.5:1 on white) */
-  --c-blue: #1f6fd1; /* Azure */
-  --c-band: var(--c-orange);
-  --stick: 24px;
+  --c-ink2: #4a453d;
+  --c-mute: #67625b;
+  --c-faint: #6f6a63;
+  --c-line: #e6e2db; /* hairline dividers only — decorative */
+  --c-line-strong: #8c867f; /* boundaries of objects that carry state */
+  --c-soft: #f1ece3; /* raised surface */
+  --c-orange: #c44e18; /* marks, large type */
+  --c-orange-text: #b34814; /* link text */
+  --c-blue: #2c77da; /* focus, selection, the archive note's rule — never text */
+  --c-band: var(--c-orange); /* the top band is one hue, per theme */
+
   color-scheme: light;
 }
 
+/* @tokens dark */
 .dark {
   --c-bg: #101318;
-  --c-fg: #eceff3;
-  --c-ink2: #b3b9c3;
-  --c-mute: #8f96a1;
-  --c-faint: #7d8490;
-  --c-line: #232933;
-  --c-soft: #161a21;
+  --c-fg: #e5e8ee; /* eased off pure white so 46px serif does not halate */
+  --c-ink2: #a2aab6;
+  --c-mute: #9097a3;
+  --c-faint: #878e9a;
+  --c-line: #232832;
+  --c-line-strong: #65707e;
+  --c-soft: #1e242e;
   --c-orange: #e3672e;
-  --c-orange-text: #e3672e;
-  --c-blue: #6aa8ff;
+  --c-orange-text: #e8763c;
+  --c-blue: #4791f4; /* the band, the headline's azure word, the focus
+     ring and the selection wash — four roles, one colour, by choice
+     rather than by collision */
   --c-band: var(--c-blue);
+
   color-scheme: dark;
 }
 
@@ -47,13 +103,14 @@
   --color-mute: var(--c-mute);
   --color-faint: var(--c-faint);
   --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
   --color-soft: var(--c-soft);
   --color-orange: var(--c-orange);
   --color-orange-text: var(--c-orange-text);
   --color-blue: var(--c-blue);
   --color-band: var(--c-band);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-franklin), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
@@ -62,17 +119,109 @@
   /* 4px spacing grid: p-4 = 16px, mt-16 = 64px, mt-24 = 96px */
   --spacing: 4px;
 
-  /* Type scale: 12 / 13.5 / 17 / 19 / 21 / 44 */
+  /* Type scale. No two steps share a RANK — a step may do several jobs
+     (--text-md sets entry titles, h4 and every deck), but no two steps
+     are close enough to be mistaken for each other at any width —
+     every adjacent pair is at least 1.10x apart at BOTH ends of its
+     clamp, which is asserted rather than asserted-about.
+     xs 12 · sm 13.5 · ui 15 · base 17 · md 19 · lg 21 ·
+     xl 23.5-26 · 2xl 26-30 · display 36-46
+     The clamps all reach their ceiling near 900px, so the scale's
+     internal ratios hold across the whole desktop range instead of
+     drifting through one band.
+     The two small steps carry tracking so their colour holds at caption
+     size. The figures were re-derived against Libre Franklin rather than
+     inherited: normalising advance width by x-height, 12px/0.01em lands
+     within 0.2% of the face this replaced, and 13.5px/0.005em runs 1.0%
+     looser than its equivalent. Both are under the threshold where the
+     grey of a caption visibly shifts, so neither was moved — but the
+     numbers are here so the next swap re-measures instead of assuming. */
   --text-xs: 12px;
+  --text-xs--letter-spacing: 0.01em;
   --text-sm: 13.5px;
+  --text-sm--letter-spacing: 0.005em;
   --text-base: 17px;
+  --text-ui: 15px; /* section labels — the one sans step above body-adjacent UI */
+  --text-code: 14px; /* mono runs small against the sans at the same nominal size */
   --text-md: 19px;
   --text-lg: 21px;
-  --text-display: clamp(30px, 5vw, 44px);
-  --text-display--line-height: 1.12;
+  /* The xl floor is 23px, not 21px: a clamp that bottoms out at --text-lg
+     would make h2 and h3 identical on every phone and tablet. */
+  --text-xl: clamp(23.5px, 2.8vw, 26px);
+  --text-2xl: clamp(26px, 3.3vw, 30px);
+  --text-display: clamp(36px, 5.1vw, 46px);
+  --text-display--line-height: 1.1;
 
   --breakpoint-sm: 600px;
   --breakpoint-md: 720px;
+  --breakpoint-lg: 900px;
+}
+
+@layer theme {
+  :root {
+    /* --- Margin-index grid. One source for the gutter. --- */
+    --label-w: 112px;
+    --label-gap: 32px;
+    --gutter: calc(var(--label-w) + var(--label-gap)); /* 144px */
+    /* The gap is the channel the row's hover arrow hangs in, so it is
+       sized by that arrow (16px) plus clearance on both sides, not by
+       taste. The label column gives up the 8px, so --gutter does not
+       move and nothing downstream re-flows. */
+
+    /* --- Ranked vertical breaks. The gap between two sibling lists is
+       the largest break on the page, because it is the largest idea
+       change on the page. Page chrome gets less. --- */
+    /* Ranked, and the ranking is asserted by scripts/check-tokens.mjs:
+       no two page-level roles share a value, the footer never outranks
+       the hero, and the section break stays at least 1.3x the hero break
+       at every width — on mobile too, where it used to collapse.
+       --gap-top and --gap-bottom are page margin rather than content
+       breaks, so they rank on their own and sit outside that ordering. */
+    --gap-top: 56px; /* page top -> nav */
+    --gap-chrome: 64px; /* nav -> content */
+    --gap-hero: 80px; /* hero -> first index */
+    --gap-lead: 60px; /* page header -> a stack of like sections */
+    --gap-group: 68px; /* like section -> like section */
+    --gap-section: 112px; /* unlike section -> unlike section — the largest break on the page */
+    --gap-footer: 72px; /* content -> footer */
+    --gap-bottom: 96px; /* footer -> page bottom — page margin, not a content break */
+
+    /* Inside an article, descending: back link, header blocks, body. */
+    --gap-art-lead: 48px; /* back link -> header */
+    --gap-art-body: 40px; /* header -> body, and body -> article footer */
+    --gap-art-block: 32px; /* between header blocks */
+    --gap-art-tight: 20px; /* title -> its own tags */
+
+    /* --- Corner radii. Two values: chips and code inline, blocks. --- */
+    --r-sm: 4px;
+    --r-md: 6px;
+
+    /* --- Chevron sizes. The mask is 3:5, so every size keeps that. --- */
+    --chev-sm-w: 6px;
+    --chev-sm-h: 10px;
+    --chev-md-w: 9px;
+    --chev-md-h: 15px;
+    --chev-lg-w: 14px;
+    --chev-lg-h: 24px;
+
+    --stick: 24px;
+  }
+  @media (max-width: 599.98px) {
+    :root {
+      --gap-top: 44px;
+      --gap-chrome: 52px;
+      --gap-hero: 56px;
+      --gap-lead: 44px;
+      --gap-group: 52px;
+      --gap-section: 88px;
+      --gap-footer: 48px;
+      --gap-bottom: 72px;
+      --gap-art-lead: 36px;
+      --gap-art-body: 32px;
+      --gap-art-block: 24px;
+      --gap-art-tight: 16px;
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -84,22 +233,37 @@
     -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-bg font-sans text-base text-fg antialiased;
+    @apply bg-bg font-sans text-base text-fg;
     line-height: 1.6;
+  }
+  /* Antialiasing thins strokes on a dark ground; Fraunces at 46px
+     reversed out loses noticeable weight. Light only. */
+  :root:not(.dark) body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   ::selection {
     background: color-mix(in srgb, var(--c-blue) 22%, transparent);
   }
+  .dark ::selection {
+    background: color-mix(in srgb, var(--c-blue) 34%, transparent);
+  }
   :focus-visible {
     outline: 2px solid var(--c-blue);
     outline-offset: 3px;
-    border-radius: 2px;
   }
   h1,
   h2,
   h3 {
     text-wrap: balance;
   }
+  /* The hero keeps `balance`. On its own, balance put both accent words
+     at the start of a line at 390px; the fix was binding each accent to
+     the word before it in Headline.tsx, not changing the wrap mode.
+     With the phrases bound, balance gives
+       I build / engineering teams / and the systems / they run on.
+     and every coloured word closes a line. `pretty` strands "run on."
+     on its own, so it is the wrong mode here. */
 }
 
 /* ------------------------------------------------------------------ *
@@ -109,31 +273,331 @@
 @layer components {
   :root {
     --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='11.5 3.75 14.15 24.5'%3E%3Cpath d='M25.40 14.40L15.00 4.00L11.75 7.25L18.89 14.40ZM25.40 17.60L15.00 28.00L11.75 24.75L18.89 17.60Z'/%3E%3C/svg%3E");
+    /* The same arrow icons.tsx draws, as a mask, for the one place that
+       needs it from CSS. Two copies of one shape is exactly the drift
+       this file spends its time preventing, so check-tokens.mjs holds
+       both masks equal to the path constants the components export. */
+    --arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2.00 13.70L17.59 13.70L17.59 18.30L6.60 18.30ZM29.00 16.00L18.00 5.00L14.75 8.25L22.49 16.00L14.75 23.75L18.00 27.00Z'/%3E%3C/svg%3E");
   }
   .chev {
     display: inline-block;
     flex: none;
-    width: 6px;
-    height: 10px;
+    width: var(--chev-sm-w);
+    height: var(--chev-sm-h);
     background: currentColor;
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
   }
 
-  /* Band across the top of every page */
+  /* Applied from here rather than exposed as Tailwind colours, so display
+     use of the accents cannot quietly end up on a 12px label. */
+  .headline-a {
+    color: var(--c-blue);
+  }
+  .headline-b {
+    color: var(--c-orange);
+  }
+
+  /* Band across the top of every page. One hue, and a different one per
+     theme: tangerine in light, azure in dark.
+     It ran the headline's pair as a hard 50/50 split for one pass, so the
+     two hues would meet somewhere other than the headline. Reverted on the
+     author's call. The finding from that pass is kept because it is not
+     obvious and it cost something to get: if the pair is ever run across
+     this element again it has to be a HARD STOP, never a ramp.
+     --c-orange and --c-blue are tuned to the SAME OKLab lightness so that
+     neither headline word wins, and two near-opposite hues at equal
+     lightness interpolate through near-neutral. Measured, the midpoint
+     fell to 31% of the lower endpoint's chroma with more than half the
+     band's width under 60% — a desaturated mauve, a third hue, on the
+     widest element of every page. No interpolation space fixes that. */
   .band {
     position: absolute;
     inset: 0 0 auto;
     height: 4px;
     background: var(--c-band);
+    /* Above .salvo (z-index 1), so the logo's volley flies UNDER this rule
+       and is gone. Without it the shots cross the band and the one in the
+       band's own hue half-dissolves into it, leaving a stub that reads as
+       a nick in the rule -- a bug, not a joke. Occluding also means the
+       flight needs no headroom arithmetic: the band is the top of the
+       page on every viewport, so the shot always ends on the same edge.
+       Measured at the exact frame a shot overlaps the rule, at 390, 720 and
+       1440 in both themes: with this, zero pixels of the rule are any
+       colour but the rule's; without it, 45 at 1440 light. The skip
+       link is the only other thing that can paint near the top and it
+       sits 12px down at z-10, clear of these 4px. Asserted in
+       check-tokens.mjs. */
+    z-index: 2;
+  }
+
+  /* --- The logo's salvo. Shift, Shift, Shift. ---
+     The only purely decorative thing in this file, and it still obeys the
+     rules: one shape (--chev, the same mask everything else uses) and the
+     two hues alternating, so even the joke is made of parts that already
+     exist. It does reach outside the logo's box: the volley climbs the
+     logo's own 45-degree axis and leaves the page under the top band.
+     The mount is the positioning context for the shots. Its display value
+     is NOT doing layout work, whatever it looks like: the mount is a flex
+     item of the nav's Link, so the used display is blockified no matter
+     what is written here. Measured, inline-flex, inline-block and plain
+     inline all give the same 25.09px header. It says inline-flex because
+     that is what a box wrapping one svg should say, not because the nav
+     depends on it. */
+  .salvo-mount {
+    position: relative;
+    display: inline-flex;
+  }
+  /* A zero-size origin at the logo's top-right corner, so each shot is
+     placed by its own transform and nothing depends on this box's size.
+     97%/0 is not the box corner rounded off, it is derived. The mark at
+     the top of the logo is the tittle and the upper bar with a 45-degree
+     channel between them; in the 290x280 viewBox the tittle's cut runs
+     y = -x + 260 and the bar's y = -x + 303, so the channel's centreline
+     is y = -x + 281.3 and it leaves the top edge at x = 281.3, which is
+     97% of the way across. The volley comes out of the logo's own gap,
+     on the gap's own axis, at the corner where it ends. */
+  .salvo {
+    position: absolute;
+    left: 97%;
+    top: 0%;
+    width: 0;
+    height: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .salvo-shot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--chev-md-w);
+    height: var(--chev-md-h);
+    /* Centre the glyph on its origin here, not with a translate in the
+       keyframes. A translate would sit inside --glyph's rotation and swing
+       round with it; a margin is screen-space and holds still. What flies
+       is the shot's centre, at any angle. */
+    margin-left: calc(var(--chev-md-w) / -2);
+    margin-top: calc(var(--chev-md-h) / -2);
+    background: var(--c-blue);
+    -webkit-mask: var(--chev) center / contain no-repeat;
+    mask: var(--chev) center / contain no-repeat;
+    /* Two angles, kept apart on purpose.
+       --axis is the barrel. The logo is cut at 45 degrees in four places
+       -- the bowl's foot, the tittle, the stem and the upper bar -- so the
+       volley leaves on that axis rather than straight out to the right.
+       Every keyframe reads rotate(axis) translate(...) rotate(glyph-axis):
+       the first turn puts the frame on the barrel, so --dist is distance
+       along it and --spread is sideways off it; the second lands the glyph
+       at --glyph in screen space whatever the barrel is doing.
+       --glyph is 135 because that is the orientation of the mark at the
+       top of the logo, derived rather than eyeballed. The tittle and the
+       upper bar are one vertical arm and one horizontal arm with 45-degree
+       cut faces across a diagonal gap, which is --chev's own construction.
+       Taking each arm's longest edge and pointing it away from its
+       partner, the mask's arms run at 135 and 225 degrees and the logo's
+       at 0 and 90, and exactly one turn maps the pair onto the pair: 135.
+       check-tokens.mjs recomputes that from both path strings, so this is
+       checked rather than asserted, and it moves if either path is redrawn.
+       The apex therefore TRAILS. The shot opens toward where it is going
+       instead of pointing at it, which is a real cost and the author's call
+       over a 3-0 council vote for an upright glyph. The council's argument
+       was that a chevron turned onto the 45 reads as a crop mark; it reads
+       as the logo's own mark instead, which is what none of us could see
+       until the mark itself had been measured.
+       --axis: 0deg still gives the due-east volley this replaced. There is
+       no equivalent switch for the glyph: any other --glyph is a different
+       claim about the logo, and the guard will say so. */
+    --axis: -45deg;
+    --glyph: 135deg;
+    /* --i is set per shot in LogoSalvo.tsx. The fan is derived from it so
+       the shot count can change in one place: (i - (n-1)/2) centres the
+       spread on the muzzle whatever n is, and 3 is (7-1)/2.
+       The fan is deliberately shallow. At +/-21px over ~140px of travel
+       the shots stacked into a near-vertical streak and read as scatter;
+       at +/-10px they read as a volley leaving the logo.
+       Measured in the browser, per shot: the fan runs 48.94 / 47.63 /
+       46.32 / 45.00 / 43.60 degrees from shot 0 to shot 4, so the middle
+       shot flies the logo's axis exactly and the rest splay about it. */
+    --spread: calc((var(--i) - 3) * 3.4px);
+    --dist: 148px;
+    /* linear, and every shot travels the same distance, because anything
+       else bunches them. Ease-out plus a per-shot distance that grew with
+       --i let the late shots catch the decelerating early ones and pile
+       into a clump halfway across. Constant speed and constant distance
+       hold the stagger's spacing all the way out: one shot every 76ms is
+       one shot every ~18px, start to finish.
+       --dist is longer than the page gives it, deliberately. Measured, the
+       shot meets the band after 88px of travel on a 900px-tall desktop
+       window and 72px on a 390px phone, so the last third of the flight is
+       behind the rule on every viewport. The band is the terminus; the
+       distance only has to be long enough to reach it. */
+    animation: salvo-fly 0.6s linear forwards;
+    /* 76ms, not the 58ms the due-east volley used. On the diagonal the
+       shots sit ~14px apart at 58ms, and at 9x15 their arms interlock into
+       a continuous zigzag ribbon -- bunting, not seven rounds. 76ms opens
+       that to ~18px and each shot reads as its own object again. */
+    animation-delay: calc(var(--i) * 76ms);
+    opacity: 0;
+  }
+  .salvo-shot:nth-child(even) {
+    background: var(--c-orange);
+  }
+  /* Opacity holds through most of the flight and drops at the end. Fading
+     linearly from the muzzle made every shot half-transparent for most of
+     its travel, which read as washed out rather than fast.
+     In practice the band swallows the shot before the fade starts. The
+     fade is the fallback for anywhere it does not -- a zoomed-out window,
+     a larger root font, anything that puts more sky above the logo. */
+  @keyframes salvo-fly {
+    from {
+      transform: rotate(var(--axis)) translate(2px, 0) rotate(calc(var(--glyph) - var(--axis)))
+        scale(0.4);
+      opacity: 0;
+    }
+    /* The muzzle. Scale and opacity both resolve here, and the translate is
+       the same fraction of the way so travel stays linear across the whole
+       flight — interpolating scale over the full distance made the shots
+       grow as they receded, which is backwards.
+       6%, not the 14% this ran at first. 14% of 148px is 20.7px, which is
+       four fifths of a 26px logo: the shot finished fading in a whole logo
+       away from the corner and read as appearing out of nothing nearby.
+       6% is 8.9px and the shot is at full strength while it is still on
+       the mark it came from. */
+    6% {
+      transform: rotate(var(--axis)) translate(calc(var(--dist) * 0.06), calc(var(--spread) * 0.06))
+        rotate(calc(var(--glyph) - var(--axis))) scale(1);
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    to {
+      transform: rotate(var(--axis)) translate(var(--dist), var(--spread))
+        rotate(calc(var(--glyph) - var(--axis))) scale(1);
+      opacity: 0;
+    }
+  }
+
+  /* Any control whose visual size is smaller than its hit area should
+     claim the difference back with margin, so the rhythm is unchanged. */
+  /* Blockified on purpose: vertical padding and negative margin do
+     nothing on an inline box, so the old version's stated contract held
+     by accident. Both axes, so a one-glyph label like "X" still clears
+     the 24px minimum target. */
+  .tap {
+    display: inline-flex;
+    align-items: center;
+    padding-block: 12px;
+    padding-inline: 8px;
+    margin-block: -12px;
+    margin-inline: -8px;
+  }
+
+  /* --- Page header + article measure ---
+     The index grid has a 144px gutter because a label lives in it. An
+     article has no label, so it does not borrow the gutter — it starts
+     on the same left edge as the nav and the footer. That leaves the
+     page with two left edges instead of three, and stops the article
+     from sitting right of the page's own centre. --- */
+  .page-header + .index-section {
+    margin-top: var(--gap-hero);
+  }
+  /* The title's optional gutter mark — a portrait on About. It hangs in
+     the same column an index label and an article's date occupy, so the
+     h1 keeps the single left edge every other h1 on the site starts
+     from. In the flow instead, an 80px image would push the title 144px
+     right of the nav and the footer. */
+  .page-header-marked {
+    display: grid;
+    grid-template-columns: var(--label-w) minmax(0, 1fr);
+    column-gap: var(--label-gap);
+  }
+  .page-mark {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 8px;
+  }
+  @media (max-width: 719.98px) {
+    /* No gutter below 720px, so the mark stacks rather than hangs. */
+    .page-header-marked {
+      grid-template-columns: 1fr;
+      row-gap: 18px;
+    }
+    .page-mark {
+      justify-content: flex-start;
+    }
+  }
+  /* The article uses the same grid as an index, so every h1 on the site
+     starts on the same left edge — which is what keeps the shared-element
+     title morph a straight fade instead of a 144px sideways slide. The
+     gutter is not left empty to achieve that: the post's date and reading
+     time live in it, in the same column an index label occupies. */
+  .article {
+    display: grid;
+    grid-template-columns: var(--label-w) minmax(0, 1fr);
+    column-gap: var(--label-gap);
+  }
+  .article > * {
+    grid-column: 2;
+    min-width: 0;
+  }
+  /* A hanging label, not a sticky one. An index label tracks because its
+     list stays on screen and the heading keeps earning its place; a
+     publication date is a one-time fact, and following the reader down
+     three thousand pixels of empty margin is persistence without a job. */
+  .article-meta {
+    align-self: start;
+    grid-column: 1;
+    grid-row: 2;
+    padding-top: 2px;
+    text-align: right;
+  }
+  /* Structural rules belong to the page, not to the measure, so the
+     article's bottom rule and the footer's rule share one right edge. */
+  .article > .spans {
+    grid-column: 1 / -1;
+    padding-left: var(--gutter);
+  }
+  @media (max-width: 719.98px) {
+    .article {
+      display: block;
+    }
+    /* The column's right edge only exists while the column does. Below
+       the breakpoint there is no gutter to hang against, so the meta
+       rejoins the flow and aligns left like everything else. */
+    .article-meta {
+      text-align: left;
+      margin-bottom: var(--gap-art-tight);
+    }
+    .article > .spans {
+      padding-left: 0;
+    }
   }
 
   /* --- Margin index: label column + list column --- */
+  /* The default break is the largest one, and the rules below narrow
+     it. It is not 0, because 0 is what shipped on About: a section that
+     followed a prose block instead of a page header matched no
+     adjacency rule at all and sat welded to the paragraph above it. A
+     missing rule should cost too much space rather than none. Every
+     page opens with a .page-header, so no index section is ever first
+     in <main> and inherits this default against the nav. */
   .index-section {
     display: grid;
-    grid-template-columns: 120px 1fr;
-    column-gap: 24px;
+    grid-template-columns: var(--label-w) 1fr;
+    column-gap: var(--label-gap);
+    margin-top: var(--gap-section); /* unlike section -> unlike section */
   }
+  /* Sibling lists of the same kind are one idea, not two. */
+  .index-section.is-group + .index-section.is-group {
+    margin-top: var(--gap-group);
+  }
+  .index-section.is-lead {
+    margin-top: var(--gap-lead);
+  }
+  /* The gutter column sets everything against its inner edge, so the
+     label, the aside and a post's meta all build one crisp margin 24px
+     off the content — whichever route is rendering it. */
   .index-label {
     position: sticky;
     top: var(--stick);
@@ -141,32 +605,68 @@
     z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding-top: 20px;
-    font-size: var(--text-sm);
-    line-height: 1.3;
+    align-items: flex-end;
+    gap: 7px;
+    padding-top: 14px;
+    line-height: 1.25;
+    text-align: right;
   }
   .index-label > .name {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-weight: 500;
+    gap: 7px;
+    font-size: var(--text-ui);
+    font-weight: 600;
+    letter-spacing: 0.015em;
     color: var(--c-fg);
   }
+  /* The label's chevron used to light up whenever the pointer entered
+     the section. The h2 is not a link, so the only thing a pointer in
+     this section can act on is a row — lighting the label as well meant
+     one pointer lit two things. On the FIRST row it lit them in the
+     same six pixels: the label's chevron and the row's hanging arrow
+     overlapped on both axes and welded into one unreadable orange
+     blob. So the row keeps the accent, and the mark holds still —
+     neutral, like every other decorative mark in this file.
+     It briefly carried the two headline hues instead. That was wrong
+     twice over: it put an accent on a mark that signals nothing, which
+     is the one thing the colour contract at the top of this file
+     forbids, and it repeats two to four times a page, which is a tic
+     rather than an identity. The pair lives where it is earned — see
+     .scissor and .prose blockquote::before. */
   .index-label > .name .chev {
-    color: var(--c-orange);
-    transition: transform 0.25s;
+    background: var(--c-line-strong);
   }
-  .index-section:hover .index-label > .name .chev {
-    transform: translateX(3px);
+  /* Lighter than the label it sits under, but the underline is solid
+     enough to read as a link without hovering. */
+  /* 13.5px of text is a 17px box, and a 17px box is not a touch target.
+     The padding buys the 24px floor; the matching negative margin means
+     nothing on screen moves to pay for it. */
+  .index-aside {
+    width: fit-content;
+    display: inline-flex;
+    padding-block: 6px;
+    padding-inline: 8px;
+    margin-block: -6px;
+    margin-inline: -8px;
+    font-size: var(--text-sm);
+    color: var(--c-faint);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
+    text-underline-offset: 3px;
+  }
+  .index-aside:hover {
+    color: var(--c-orange-text);
+    text-decoration-color: currentColor;
   }
   .index-rows {
     border-top: 1px solid var(--c-line);
     min-width: 0;
   }
   .index-offset {
-    margin-left: 144px;
+    margin-left: var(--gutter);
   }
+
   @media (max-width: 719.98px) {
     .index-section {
       grid-template-columns: 1fr;
@@ -178,13 +678,22 @@
       flex-direction: row;
       justify-content: space-between;
       align-items: baseline;
-      padding: 12px 0;
+      text-align: left;
+      padding: 10px 0;
+      top: 0;
+      /* Opaque, not a wash. At 86% with an 8px blur a 19px Fraunces
+         title read straight through the bar: its top half ghosted
+         behind the label while its descenders came out below the rule.
+         Blur does not defeat 17.8:1. The hairline is what makes this a
+         layer; the translucency only made it a veil. */
       background: var(--c-bg);
       border-bottom: 1px solid var(--c-line);
-      top: 0;
     }
     .index-rows {
       border-top: 0;
+      /* The sticky label already draws the rule that opens the list, so
+         the first row needs the optical gap the border-top used to give. */
+      padding-top: 4px;
     }
   }
 
@@ -195,8 +704,17 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 16px;
-    padding: 16px 0;
+    padding: 14px 0;
     border-bottom: 1px solid var(--c-line);
+  }
+  /* A list is opened by the rule under its label and closed by whatever
+     follows it — the next section's gap, or the footer's own rule. A
+     trailing hairline would just stack a second one into the same 90px. */
+  .entry:last-child {
+    border-bottom: 0;
+  }
+  .entry-date {
+    font-size: var(--text-sm);
   }
   .entry-title {
     display: block;
@@ -205,16 +723,23 @@
     font-size: var(--text-md);
     line-height: 1.35;
     letter-spacing: -0.01em;
+    text-wrap: balance;
     transition: color 0.15s;
   }
-  .entry:hover .entry-title,
+  /* Links only. A Selected work row with nothing to open renders as a
+     div, and a div that turns tangerine under the pointer promises a
+     destination it does not have — the one thing the colour contract at
+     the top of this file is for. The hanging arrow is already gated the
+     same way, in the component, by not rendering at all without an href. */
+  a.entry:hover .entry-title,
+  a.entry:focus-visible .entry-title,
   .entry[data-pending] .entry-title {
     color: var(--c-orange-text);
   }
   .entry-lead {
     position: absolute;
-    left: -20px;
-    top: 21px;
+    left: -18px;
+    top: 19px;
     width: 16px;
     height: 16px;
     color: var(--c-orange);
@@ -223,41 +748,84 @@
       opacity 0.2s,
       left 0.2s;
   }
+  /* Keyboard users get the same affordance as mouse users, from the
+     same rule — not a generic ring standing in for it. */
   .entry:hover .entry-lead,
+  .entry:focus-visible .entry-lead,
   .entry-lead[data-pending] {
     opacity: 1;
-    left: -28px;
+    /* Centred in the 32px channel, not merely inside it: 8px of air on
+       the label's side and 8px before the title. The pending mark is
+       4px wider, so it sits 2px further out to stay centred too. */
+    left: -24px;
   }
   .entry-lead[data-pending] {
     width: 20px;
     height: 20px;
-    top: 19px;
-    left: -32px;
+    top: 17px;
+    left: -26px;
+  }
+  /* The hanging lead needs room outside the column; below that it has
+     nowhere to go, so it is retired rather than clipped. */
+  @media (max-width: 839.98px) {
+    .entry .entry-lead:not([data-pending]) {
+      display: none;
+    }
   }
   @media (max-width: 599.98px) {
-    .entry:hover .entry-lead {
-      opacity: 0;
+    /* Not a reflow: the row is re-set as a stacked card, with the date
+       promoted to an eyebrow so the title gets the full measure and
+       stops breaking one word onto a second line. */
+    .entry {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 5px;
+      padding: 15px 0;
     }
-    .entry:hover .entry-title {
+    .entry-date {
+      order: -1;
+      font-size: var(--text-xs);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--c-faint);
+    }
+    /* fit-content + balance made a title break at ~60% of the measure
+       and sit narrow beside a full-width divider. */
+    .entry-title {
+      width: 100%;
+      text-wrap: pretty;
+    }
+    a.entry:hover .entry-title {
       color: inherit;
     }
     .entry-lead,
     .entry-lead[data-pending] {
       left: auto;
       right: 0;
+      top: 16px;
     }
     .entry-lead[data-pending] {
       opacity: 1;
       left: auto;
     }
-    .entry-lead[data-pending] ~ .entry-date {
-      visibility: hidden;
-    }
   }
 
-  /* --- Scissor loader: the split chevron's arms slide apart and back --- */
+  /* --- Scissor loader: the split chevron's arms slide apart and back ---
+     This is the one place on the site where both meanings are true at
+     once: you have acted (tangerine) and the system is answering
+     (azure). So it is where the headline's pair is earned rather than
+     applied, and the mask's own gap keeps the two hues from meeting.
+     It also shows at most once at a time, which is what an identity
+     mark should do — the index label's chevron was reverted to neutral
+     precisely because it repeated. */
   .scissor path {
     transform-box: view-box;
+  }
+  .scissor .u {
+    fill: var(--c-blue);
+  }
+  .scissor .l {
+    fill: var(--c-orange);
   }
   .scissor .u {
     animation: scissor-u 1s cubic-bezier(0.6, 0, 0.2, 1) infinite;
@@ -289,45 +857,107 @@
     }
   }
 
-  /* --- Tags / pills --- */
-  .archive-tag {
-    margin-left: 8px;
-    border: 1px solid var(--c-line);
-    border-radius: 3px;
-    padding: 3px 5px;
-    font: 500 10.5px/1 var(--font-sans);
-    letter-spacing: 0.06em;
+  /* --- Chips. One shape, one size, one border token. The only thing
+     that separates a state chip from a topic chip is its case. --- */
+  /* Two chips, one size. A topic tag is not interactive and carries no
+     state, so it sits in the surface; a state chip gets a boundary. Fill
+     and case are the only things that separate them — never size. */
+  .chip {
+    display: inline-block;
+    border: 1px solid transparent;
+    background: var(--c-soft);
+    border-radius: var(--r-sm);
+    padding: 2px 7px;
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+    color: var(--c-mute);
+  }
+  /* A chip is 23.4px tall, 0.6px under the 24px target floor, and it
+     cannot pad its way up there: a chip has a fill, so padding grows
+     the shape and breaks the one-size rule above. .tap is the wrong
+     tool for the same reason. A transparent overlay buys the target
+     without moving a pixel of what you see. */
+  .chip-tap {
+    position: relative;
+  }
+  .chip-tap::after {
+    content: '';
+    position: absolute;
+    inset: -5px -2px;
+  }
+  /* letter-spacing is applied after EVERY character, the last one
+     included, so a letterspaced word inside a border sits 0.07em closer
+     to the left edge than the right. At 12px that is 0.84px of lean on a
+     7px pad — small, but it is the only thing in the row that is not
+     centred in its own box. The right pad gives the tracking back. */
+  .chip-state {
+    background: none;
+    border-color: var(--c-line-strong);
+    margin-left: 9px;
+    letter-spacing: 0.07em;
+    padding-right: calc(7px - 0.07em);
     text-transform: uppercase;
-    color: var(--c-faint);
-    vertical-align: 3px;
+    vertical-align: 2px;
   }
   @media (max-width: 599.98px) {
-    .archive-tag {
-      display: none;
+    /* Archived is state, not decoration — it survives the breakpoint
+       instead of being deleted by it. */
+    .chip-state {
+      margin-left: 7px;
+      vertical-align: 1px;
     }
   }
 
-  /* --- External links get the mark's native up-right corner --- */
+  /* --- External links point out of the page ---
+     This used to be the split chevron, rotated. Leaving somewhere is
+     navigation, and the rule this file keeps everywhere else is that
+     the arrow is navigation and the chevron is a mark — so the chevron
+     was the wrong shape here on the project's own terms. It also could
+     not carry the job at 6x10: rotated, a chevron reads as a stray
+     apostrophe after the last word rather than as a direction. */
+  /* The contact rows are the only links on the site that sit outside
+     .prose, so they are the only ones that would otherwise have no link
+     colour at all. Same treatment as .prose a rather than a second one:
+     tangerine means you can act on this, wherever it appears, and a
+     contact row is the most actionable thing on the page. */
+  .ext-link {
+    color: var(--c-orange-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+    transition: text-decoration-color 0.15s;
+  }
+  .ext-link:hover {
+    text-decoration-color: currentColor;
+  }
+
   a.ext::after {
     content: '';
     display: inline-block;
-    width: 6px;
-    height: 10px;
+    width: 11px;
+    height: 11px;
     margin-left: 4px;
-    vertical-align: 0.45em;
+    vertical-align: 0.02em;
     background: currentColor;
-    opacity: 0.8;
     transform: rotate(-45deg);
-    -webkit-mask: var(--chev) center / contain no-repeat;
-    mask: var(--chev) center / contain no-repeat;
+    -webkit-mask: var(--arrow) center / contain no-repeat;
+    mask: var(--arrow) center / contain no-repeat;
   }
 
   /* ------------------------------------------------------------------ *
    * Prose (rich text from Payload)
    * ------------------------------------------------------------------ */
+  /* No max-width here: inside .article and .index-offset the measure is
+     already decided by the grid's gutter arithmetic (736 - 144 = 592px,
+     which measures 66 characters at 17px Libre Franklin). One thing
+     should set the measure. */
   .prose {
     font-size: var(--text-base);
-    line-height: 1.75;
+    line-height: 1.7;
   }
   .prose > * + * {
     margin-top: 24px;
@@ -335,17 +965,27 @@
   .prose p {
     text-wrap: pretty;
   }
+  /* A lead paragraph rendered outside the rich text — About's opening
+     sentence lives in its own CMS field — still belongs to the rich
+     text's rhythm. Same measure, same leading, same break. Set 4px or
+     0.1 of leading away from it and the page has two paragraph streams
+     that almost line up, which reads worse than an obvious difference.
+     scripts/check-tokens.mjs holds the two line-heights equal. */
+  .prose-lead {
+    line-height: 1.7;
+    text-wrap: pretty;
+    margin-bottom: 24px;
+  }
   .prose h2,
   .prose h3,
   .prose h4 {
     font-family: var(--font-serif);
     font-weight: 400;
-    letter-spacing: -0.01em;
-    line-height: 1.3;
-    margin-top: 48px;
+    letter-spacing: -0.012em;
+    line-height: 1.25;
   }
   .prose h2 {
-    font-size: 24px;
+    font-size: var(--text-xl);
   }
   .prose h3 {
     font-size: var(--text-lg);
@@ -353,34 +993,80 @@
   .prose h4 {
     font-size: var(--text-md);
   }
-  .prose h2 + *,
-  .prose h3 + *,
-  .prose h4 + * {
-    margin-top: 12px;
+  /* One source for the gap above a heading, and one for below it.
+     Margins do not stack with the generic * + * rule. */
+  .prose > * + :is(h2, h3, h4) {
+    margin-top: 48px;
+  }
+  .prose > * + h4 {
+    margin-top: 36px;
+  }
+  .prose :is(h2, h3, h4) + * {
+    margin-top: 14px;
   }
   .prose a {
     color: var(--c-orange-text);
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+    transition: text-decoration-color 0.15s;
+  }
+  .prose a:hover {
+    text-decoration-color: currentColor;
   }
   .prose strong {
     font-weight: 600;
   }
   .prose code {
-    font: 13.5px var(--font-mono);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
     background: var(--c-soft);
-    border: 1px solid var(--c-line);
+    border: 1px solid var(--c-line-strong);
     padding: 1px 5px;
-    border-radius: 4px;
+    border-radius: var(--r-sm);
   }
   .prose pre {
-    font: 13px/1.7 var(--font-mono);
+    position: relative;
+    font: var(--text-code) / 1.7 var(--font-mono);
     background: var(--c-soft);
-    border: 1px solid var(--c-line);
-    border-radius: 6px;
-    padding: 16px 20px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--r-md);
+    padding: 20px;
     overflow-x: auto;
+  }
+  /* The language was already on the element and was being thrown away.
+     It is the one piece of metadata a code block owns. */
+  /* A corner tab, anchored to the block rather than to the first line.
+     The pre reserves the width with padding-right, so a long first line
+     stops short of it instead of running underneath. */
+  .prose pre[data-language] {
+    padding-right: 72px;
+  }
+  .prose pre[data-language]::before {
+    content: attr(data-language);
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 4px 9px;
+    padding-right: calc(9px - 0.08em); /* trailing letter-space, as on .chip-state */
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-mute);
+    border-left: 1px solid var(--c-line-strong);
+    border-bottom: 1px solid var(--c-line-strong);
+    border-radius: 0 var(--r-md) 0 var(--r-sm);
+  }
+  @media (max-width: 599.98px) {
+    /* At 390px a 24-character token in a bordered box forces breaks on both
+       sides of itself and reads heavier than the sentence around it. The
+       fill alone still marks it as code. */
+    .prose :not(pre) > code {
+      border-color: transparent;
+    }
   }
   .prose pre code {
     background: none;
@@ -389,7 +1075,7 @@
     font-size: inherit;
   }
   .prose figure figcaption {
-    margin-top: 8px;
+    margin-top: 10px;
     font-size: var(--text-sm);
     color: var(--c-faint);
   }
@@ -401,70 +1087,108 @@
     list-style: none;
   }
   .prose ol {
-    padding-left: 22px;
+    padding-left: 24px;
     list-style: decimal;
   }
   .prose li {
-    margin-top: 8px;
-    line-height: 1.65;
+    margin-top: 10px;
+    line-height: 1.7;
+  }
+  .prose ol li::marker {
+    color: var(--c-faint);
   }
   .prose ul > li {
     position: relative;
-    padding-left: 22px;
+    padding-left: 24px;
   }
+  /* Neutral. A bullet is punctuation, not a call to action — when every
+     marker was orange, orange stopped meaning anything. */
   .prose ul > li::before {
     content: '';
     position: absolute;
     left: 3px;
-    top: 0.62em;
-    width: 6px;
-    height: 10px;
-    background: var(--c-orange);
+    top: 0.58em;
+    width: var(--chev-sm-w);
+    height: var(--chev-sm-h);
+    background: var(--c-line-strong);
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
   }
+  /* The pull quote is the one place the mark earns the accent: it is
+     rare, it is the author's voice, and it is a deliberate interruption.
+     It carries the headline's pair, azure over tangerine, split at 50%.
+     That number is not a guess and must not be nudged: the chevron is
+     drawn symmetrically about its own gap — viewBox y 3.75-28.25, upper
+     arm ending at 14.40, lower starting at 17.60, midpoint 16.00, which
+     is exactly half — so a hard stop at 50% lands dead centre of the gap
+     and the two hues never touch. The gap is 3.13px at --chev-lg-h, so
+     there is +/-6.5% of tolerance before a hue crosses onto an arm.
+     Hard stop, not a ramp, for the reason recorded on .band.
+     One cost, known and accepted rather than overlooked: --chev is
+     CHEV_UPPER + CHEV_LOWER verbatim (asserted in check-tokens.mjs) and
+     .scissor fills those same two paths azure-over-tangerine, so at rest
+     this mark and the loader are one object at two sizes — and the
+     loader is what fires on the index row clicked to get here. */
+  /* No max-width here. `em` on an element whose own font-size is 27-30px
+     computes to 648-720px against a 350-592px column, so the cap never
+     bound — the third inert em-cap this file has shipped, now guarded
+     against in scripts/check-tokens.mjs. The quote's mass at 390px is
+     taken out with size and leading instead, as far as the 1.10x ladder
+     allows: it still runs longer than a two-line title, which is the
+     honest limit of what the scale can do for a long quote. */
   .prose blockquote {
     position: relative;
-    margin: 32px 0;
-    padding-left: 24px;
-    font: 400 var(--text-lg) / 1.45 var(--font-serif);
-    letter-spacing: -0.01em;
+    padding-left: 30px;
+    font-family: var(--font-serif);
+    font-size: var(--text-2xl);
+    font-weight: 400;
+    line-height: 1.28;
+    letter-spacing: -0.014em;
+  }
+  .prose > * + blockquote {
+    margin-top: 40px;
+  }
+  .prose blockquote + * {
+    margin-top: 40px;
   }
   .prose blockquote::before {
     content: '';
     position: absolute;
-    left: -6px;
-    top: 0.25em;
-    width: 14px;
-    height: 24px;
-    background: var(--c-orange);
+    left: 0;
+    top: 0.2em;
+    width: var(--chev-lg-w);
+    height: var(--chev-lg-h);
+    background: linear-gradient(180deg, var(--c-blue) 0 50%, var(--c-orange) 50%);
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
   }
   .prose hr {
     position: relative;
-    height: 12px;
-    margin: 48px 0;
+    height: var(--chev-md-h);
     border: 0;
     background:
-      linear-gradient(var(--c-line), var(--c-line)) left center / calc(50% - 18px) 1px no-repeat,
-      linear-gradient(var(--c-line), var(--c-line)) right center / calc(50% - 18px) 1px no-repeat;
+      linear-gradient(var(--c-line), var(--c-line)) left center / calc(50% - 20px) 1px no-repeat,
+      linear-gradient(var(--c-line), var(--c-line)) right center / calc(50% - 20px) 1px no-repeat;
+  }
+  .prose > * + hr,
+  .prose hr + * {
+    margin-top: 48px;
   }
   .prose hr::after {
     content: '';
     position: absolute;
     left: 50%;
     top: 0;
-    width: 7px;
-    height: 12px;
-    margin-left: -3.5px;
-    background: var(--c-orange);
+    width: var(--chev-md-w);
+    height: var(--chev-md-h);
+    margin-left: calc(var(--chev-md-w) / -2);
+    background: var(--c-line-strong);
     transform: rotate(90deg);
     -webkit-mask: var(--chev) center / contain no-repeat;
     mask: var(--chev) center / contain no-repeat;
   }
   .prose img {
-    border-radius: 6px;
+    border-radius: var(--r-md);
   }
 }
 

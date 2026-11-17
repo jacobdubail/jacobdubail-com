@@ -10,6 +10,8 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 const nextConfig: NextConfig = {
   // Cache Components: data is dynamic by default and we opt in with 'use cache'
   // (see src/lib/queries.ts). Payload's afterChange hooks call revalidateTag().
+  // Set by `next upgrade --agent=security` (16.4.2 -> 16.4.6).
+  experimental: { agentUpgrade: 'security' },
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,
