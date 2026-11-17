@@ -32,18 +32,14 @@ export const card = {
   highlightOrange: 'systems',
 
   /**
-   * REVERTED to the accurate version. The draft that sat here claimed
-   * you still write the frontend day to day; that was written off a
-   * one-word answer about your React/TypeScript background and you
-   * flagged it as untrue. Nothing on this page should assert how you
-   * spend your days except you.
-   *
-   * If the page is to aim at a frontend role, this line is where it
-   * happens — but it has to be built from the real history, not from an
-   * inference about it.
+   * The deck does the work the headline deliberately does not. The
+   * headline is about teams; this is where a frontend reviewer finds
+   * out you are still the architect on the code. Both halves are true
+   * and the order matters — lead with the managing and the craft reads
+   * as nostalgia.
    */
   intro:
-    'Engineering operations and hiring at Fueled, building the systems that help our teams hire well and ship steadily.',
+    'Engineering manager for web applications at Fueled, and a hands-on frontend architect — React, Next.js and TypeScript on platforms used by millions.',
 
   /**
    * The bio. First paragraph is set as the lead and the rest as body
@@ -52,54 +48,46 @@ export const card = {
    * application; past that it is a résumé, and the résumé is a link.
    */
   bio: [
-    "I'm Jacob. I work on engineering operations and hiring at Fueled, where I help our teams find great engineers and run smoothly once they're here.",
-    'This page is a sample of how I like to work. Its stylesheet makes claims — contrast ratios, type steps, which vertical break outranks which — and a script re-derives every one of them and fails the build the moment a claim stops being true.',
-    'Before Fueled I spent years as an independent web consultant, building sites for agencies, think tanks and small businesses. Lately I have been handing AI agents the parts of team operations that were eating the week.',
+    "I'm Jacob. I lead web application architecture and engineering teams at Fueled, and I am still in the code — React, Next.js and TypeScript on platforms where performance, accessibility and security are requirements rather than ambitions.",
+    'The work runs from a multi-agency dashboard serving millions of California residents at WCAG 2.1 AA, to an Emmy-winning journalism platform rebuilt onto the App Router and React Server Components, to a passenger portal that has to stay usable over a satellite link at altitude.',
+    'Alongside delivery I write the React practices the wider engineering organisation works from, and coach senior engineers into tech leads. Before Fueled I spent years as an independent web consultant.',
   ],
 
   /**
-   * Selected work. Three rows is the right number for a page someone
-   * opens from an application: enough to show a pattern, few enough that
-   * every one gets read.
+   * Selected work. Three rows, in the order a frontend reviewer should
+   * meet them: the biggest audience, the deepest framework work, then
+   * the one nobody else has done.
    *
-   * Each `description` is one line answering "what did you actually do",
-   * not what the thing was. A reviewer scanning for craft wants the verb.
+   * No client is named beyond what the public profile names, and no row
+   * links anywhere, because none of this is public. The descriptions
+   * lead with the verb and carry the scale, which is what a reviewer is
+   * scanning for.
    *
-   * TODO — the three below are seeded from what the repo and the old
-   * About page already said, and they are the weakest version of this
-   * section. Production React/TypeScript work belongs ABOVE them. One
-   * row each, in this shape:
-   *
-   *   {
-   *     title: 'What it is called',
-   *     meta: '2024–2026',          // or a year, or 'Ongoing'
-   *     description: 'What YOU did, in one line, starting with a verb.
-   *                   Scale belongs here: users, requests, team size.',
-   *     href: 'https://…',          // omit if there is nothing to open
-   *   }
-   *
-   * Drop any of the seeded three that a stronger row displaces. Three
-   * rows is the right number; five is a résumé.
+   * A fourth is available if one of these should go: the global
+   * communications portal — Next.js against Contentful with TanStack
+   * Query handling caching and revalidation, used daily by tens of
+   * thousands of staff worldwide.
    */
   work: [
     {
-      title: 'jacobdubail.com',
-      meta: '2026',
+      title: 'Multi-agency dashboard, State of California',
+      meta: '2022–2026',
       description:
-        'Next.js 16 and React 19 on Payload. Hand-built design system whose colour, type and spacing claims are asserted by a script that fails the build when one stops being true.',
+        'Led the frontend architecture unifying disconnected legacy systems into one React and Next.js application for millions of residents, held to WCAG 2.1 AA, strict schema validation and state security review.',
       href: undefined as string | undefined,
     },
     {
-      title: 'Evaluation assistant for Greenhouse',
-      meta: 'Ongoing',
+      title: 'Emmy-winning journalism platform',
+      meta: '2025–2026',
       description:
-        'Agent that reads a candidate’s submission against the role’s scorecard and drafts the reviewer’s first pass.',
+        'Rebuilt a single-instance codebase onto the Next.js App Router and React Server Components, turning it into a commercial multi-state product and moving Core Web Vitals with server-driven UI.',
       href: undefined as string | undefined,
     },
     {
-      title: 'Agent workflows for Linear',
-      meta: 'Ongoing',
-      description: 'Triage and backlog grooming handed to agents instead of a weekly meeting.',
+      title: 'In-flight passenger portal, major airline',
+      meta: '2025–2026',
+      description:
+        'Designed an offline-tolerant UI framework in Next.js, Payload and TypeScript against real-time aircraft telemetry over LEO satellite, where bandwidth and latency are the binding constraints.',
       href: undefined as string | undefined,
     },
   ],
