@@ -26,8 +26,9 @@
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/run.ts",
     "seed:demo": "cross-env NODE_OPTIONS=--no-deprecation SEED_DEMO=true payload run src/seed/run.ts",
     "import:wordpress": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/import-wordpress.ts",
-    "db:up": "docker compose up -d postgres",
-    "vercel-build": "node scripts/check-tokens.mjs && cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" payload migrate && pnpm build"
+    "db:up": "docker compose up -d --wait postgres",
+    "vercel-build": "node scripts/check-tokens.mjs && cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" payload migrate && pnpm build",
+    "draft": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/create-draft.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.91.0",
