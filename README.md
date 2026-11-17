@@ -4,6 +4,8 @@ Personal site for Jacob Dubail. Next.js 16 (App Router, Cache Components) with P
 
 Open decisions and the calls made while building are in [ASSUMPTIONS.md](./ASSUMPTIONS.md).
 
+> **The public site is one page right now.** See [One page, for now](#one-page-for-now).
+
 ## Quick start
 
 Requires Node 22.12+, pnpm 10, and Postgres 16+ (Docker or a local install).
@@ -38,29 +40,56 @@ In development Payload "pushes" schema changes straight to the database, so you 
 
 ```
 src/
-  app/(frontend)/        public site: home, writing, projects, about, feed.xml, sitemap
+  app/(frontend)/        public site: the card, 404, robots, sitemap
   app/(payload)/         Payload admin + REST/GraphQL API (generated, lightly edited)
+  content/card.ts        every word on the public page
   collections/           Posts, Projects, Media, Users
   globals/               SiteSettings (hero, intros, social links), About
-  components/            EntryRow, IndexSection (margin index), nav/footer, icons, RichText
-  lib/queries.ts         every read: 'use cache' + cacheTag
+  components/            IndexSection (margin index), PageHeader, Headline, nav/footer, icons
+  lib/queries.ts         every Payload read: 'use cache' + cacheTag — unused while the site is one page
   hooks/revalidate.ts    Payload afterChange → revalidateTag
   seed/                  seed data + Lexical JSON helpers
 scripts/import-wordpress.ts
-redirects.ts             old WordPress URLs → new routes
+redirects.ts             everything that is not the card → the card (307, on purpose)
 ```
 
 **Caching.** `cacheComponents` and `partialPrefetching` are on. Every Payload read lives in `src/lib/queries.ts` as a `'use cache'` function with `cacheLife('max')` and a tag (`posts`, `posts:<slug>`, `global:about`, …). When you save in the admin, the collection's `afterChange` hook calls `revalidateTag(tag, 'max')`. The next visitor gets the old page while it regenerates, and everyone after that gets the new one. Every page builds as static HTML.
 
+While the site is one page none of that is on the critical path: the card reads no database, and the only cached thing left on it is the footer's copyright year (`cacheLife('weeks')`, so the year turns over without a redeploy).
+
 Scripts (`seed`, `import:wordpress`) run outside Next.js, so they can't clear its cache. After running one against production, either redeploy or, while logged in, `POST /api/revalidate`.
 
-**View transitions.** React 19.3's `<ViewTransition>` is wired into `EntryRow` and the post/project headers with matching `title-*` / `date-*` names, so titles and dates morph from the list into the article. The rest of the page crossfades. Detail pages set `export const instant = false` on purpose: the morph only pairs when the header renders in the same commit as the navigation. See the comment in `writing/[slug]/page.tsx`.
-
-**Loader.** `EntryLead` uses `useLinkStatus()`: while a link's navigation is pending, the hover arrow becomes the scissor loader. Pages are prefetched, so you'll mostly see it on slow connections.
+**View transitions.** `SiteNav` and `SiteFooter` still carry view-transition names. The shared-element morph between a list row and an article header left with the lists; it comes back with them.
 
 **Design tokens.** All colors, type sizes and the 4px spacing grid are in `src/app/(frontend)/globals.css` (`@theme`). Light mode: tangerine `#E05C1F` band, azure `#1F6FD1` + tangerine highlights. Dark mode: azure band. The split-chevron motif is one CSS mask (`--chev`) reused for nav, labels, bullets, quotes, section breaks and external links.
 
-**Fonts.** Inter, Fraunces and JetBrains Mono (variable, latin subset) are self-hosted from `src/fonts` with `next/font/local`. All three are SIL Open Font License.
+**Fonts.** Libre Franklin, Fraunces and JetBrains Mono (variable, latin subset) are self-hosted from `src/fonts` with `next/font/local`. All three are SIL Open Font License.
+
+## One page, for now
+
+The public site is a business card: one route, one file of copy, no database read. The writing and project indexes are off the air until there are enough articles to carry them. Payload is untouched underneath — the admin runs, the collections and globals are intact, and drafts can be written at `/admin` the whole time.
+
+What the pivot did:
+
+|            |                                                                                                                                                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Copy       | moved from the `site-settings` and `about` globals into `src/content/card.ts`. Edit that file and deploy.                                                                                                      |
+| Routes     | `/writing`, `/projects`, `/about` and `/feed.xml` deleted, along with `EntryRow`, `EntryLead`, `RichText`, `ArchiveNote` and `NavLinks`.                                                                       |
+| Redirects  | every old URL, including the WordPress ones, now 307s to `/`. Temporary, not permanent — a 308 would be cached in readers' browsers long after the lists come back.                                            |
+| Nav        | reduced to the wordmark. The site's social links moved from the footer into the card's contact block.                                                                                                          |
+| Stylesheet | untouched. `globals.css` still carries the rules for entry rows, articles and prose, and `scripts/check-tokens.mjs` still holds all of them to their claims. The design system is what the restore depends on. |
+
+**Restoring the full site.** Everything deleted is one commit back:
+
+```bash
+git log --oneline -1 <this-commit>^     # the last commit with the lists in it
+git checkout <that-sha> -- 'src/app/(frontend)/writing' 'src/app/(frontend)/projects' \
+  'src/app/(frontend)/about' 'src/app/(frontend)/feed.xml' src/components/EntryRow.tsx \
+  src/components/EntryLead.tsx src/components/RichText.tsx src/components/ArchiveNote.tsx \
+  src/components/NavLinks.tsx src/app/(frontend)/sitemap.ts redirects.ts
+```
+
+Then put `NavLinks` back in `SiteNav`, point the home page at `getSettings()`/`getPosts()`/`getProjects()` again, restore the RSS `alternates` entry in `layout.tsx`, and delete `src/content/card.ts`.
 
 ## Deploying to Vercel
 

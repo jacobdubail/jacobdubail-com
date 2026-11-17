@@ -79,7 +79,11 @@ export function LogoSalvo({ className }: { className?: string }) {
       {volley > 0 && (
         <span className="salvo" key={volley} aria-hidden>
           {Array.from({ length: SHOTS }, (_, i) => (
-            <span className="salvo-shot" key={i} style={{ '--i': String(i) } as React.CSSProperties} />
+            <span
+              className="salvo-shot"
+              key={i}
+              style={{ '--i': String(i) } as React.CSSProperties}
+            />
           ))}
         </span>
       )}

@@ -913,6 +913,23 @@
      was the wrong shape here on the project's own terms. It also could
      not carry the job at 6x10: rotated, a chevron reads as a stray
      apostrophe after the last word rather than as a direction. */
+  /* The contact rows are the only links on the site that sit outside
+     .prose, so they are the only ones that would otherwise have no link
+     colour at all. Same treatment as .prose a rather than a second one:
+     tangerine means you can act on this, wherever it appears, and a
+     contact row is the most actionable thing on the page. */
+  .ext-link {
+    color: var(--c-orange-text);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+    transition: text-decoration-color 0.15s;
+  }
+  .ext-link:hover {
+    text-decoration-color: currentColor;
+  }
+
   a.ext::after {
     content: '';
     display: inline-block;

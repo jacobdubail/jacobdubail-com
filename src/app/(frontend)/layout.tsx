@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteNav } from '@/components/SiteNav'
 import { themeScript } from '@/components/ThemeToggle'
+import { card } from '@/content/card'
 import { siteName, siteUrl } from '@/lib/site'
 
 import './globals.css'
@@ -31,13 +32,17 @@ const jetbrains = localFont({
   preload: false,
 })
 
+/**
+ * One page, so no title template and no feed link: the template never
+ * fires with nothing to nest under it, and advertising an RSS feed that
+ * redirects to the home page is worse than advertising none. Both come
+ * back with /writing.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: siteName, template: `%s · ${siteName}` },
-  description:
-    'Engineering operations and hiring at Fueled. Writing about hiring, team process, and the tools that make product teams faster.',
-  alternates: { types: { 'application/rss+xml': '/feed.xml' } },
-  openGraph: { siteName, type: 'website' },
+  description: card.intro,
+  openGraph: { siteName, type: 'website', title: siteName, description: card.intro },
 }
 
 export const viewport: Viewport = {

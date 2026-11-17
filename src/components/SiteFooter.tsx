@@ -1,43 +1,28 @@
 import { cacheLife } from 'next/cache'
-import { Fragment } from 'react'
-
-import { getSettings } from '@/lib/queries'
 
 import { BackToTop } from './BackToTop'
 import { ThemeToggle } from './ThemeToggle'
 
+/**
+ * Three items, one row, at every width. The explicit two-row grid this
+ * used to carry below 600px existed because the social links shared the
+ * line; they live in the contact block now, and what is left measures
+ * about 270px at 13.5px — inside a 390px viewport's 350px of column, so
+ * flex-wrap has nothing to decide and no breakpoint is needed.
+ *
+ * Still 'use cache': the copyright year is read at render, and a
+ * prerendered route may not read the clock outside a cache boundary.
+ * A weekly life keeps the year current without a redeploy.
+ */
 export async function SiteFooter() {
   'use cache'
-  cacheLife('weeks') // keeps the copyright year current without a redeploy
-  const settings = await getSettings()
-  const links = (settings.social ?? []).filter((l) => l.inFooter !== false)
+  cacheLife('weeks')
 
   return (
-    /* One row on desktop. Below 600px it becomes an explicit two-row grid —
-       links, then copyright and Top — rather than letting flex-wrap decide,
-       which used to strand "Top" alone on a line of its own. */
-    <footer className="mt-[var(--gap-footer)] flex flex-wrap items-center gap-x-7 gap-y-4 border-t border-line pt-7 text-sm text-faint [view-transition-name:site-footer] max-sm:grid max-sm:grid-cols-2 max-sm:gap-y-5">
-      <span className="mr-auto max-sm:order-2 max-sm:mr-0">
-        © {new Date().getFullYear()} Jacob Dubail
-      </span>
-      <span className="flex items-center gap-x-7 max-sm:order-1 max-sm:col-span-2 max-sm:justify-between max-sm:gap-x-4">
-        {links.length ? (
-          <span className="inline-flex items-center">
-            {links.map((l, i) => (
-              <Fragment key={l.id ?? l.url}>
-                {i > 0 ? <span className="chev mx-2.5 text-line-strong" aria-hidden /> : null}
-                <a href={l.url} className="tap hover:text-orange-text" rel="me">
-                  {l.label}
-                </a>
-              </Fragment>
-            ))}
-          </span>
-        ) : null}
-        <ThemeToggle />
-      </span>
-      <span className="max-sm:order-3 max-sm:justify-self-end">
-        <BackToTop />
-      </span>
+    <footer className="mt-[var(--gap-footer)] flex flex-wrap items-center gap-x-7 gap-y-4 border-t border-line pt-7 text-sm text-faint [view-transition-name:site-footer]">
+      <span className="mr-auto">© {new Date().getFullYear()} Jacob Dubail</span>
+      <ThemeToggle />
+      <BackToTop />
     </footer>
   )
 }
