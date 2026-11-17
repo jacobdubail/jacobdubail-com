@@ -10,9 +10,14 @@
  *   tangerine (--c-orange / --c-orange-text) = you can act on this.
  *     Links, the active nav item, hover and motion marks.
  *   azure (--c-blue) = the system is talking back.
- *     Focus ring, selection, the archive note's rule.
+ *     Focus ring, selection, the archive note's rule, and the section
+ *     label's chevron.
  * Decorative marks (list bullets, rules, separators) are neutral at rest
- * and only take an accent when they signal state.
+ * and only take an accent when they signal state. The section label's
+ * chevron is the one exception, on the author's call: it is structure
+ * rather than content, and azure is the hue this file already gives to
+ * the site speaking about itself. See .index-label for the hazard that
+ * exception has to keep clearing.
  *
  * Three things use the hues as identity rather than as meaning: the
  * headline's two accent words, the ScissorLoader, and the pull quote's
@@ -620,22 +625,25 @@
     letter-spacing: 0.015em;
     color: var(--c-fg);
   }
-  /* The label's chevron used to light up whenever the pointer entered
-     the section. The h2 is not a link, so the only thing a pointer in
-     this section can act on is a row — lighting the label as well meant
-     one pointer lit two things. On the FIRST row it lit them in the
-     same six pixels: the label's chevron and the row's hanging arrow
-     overlapped on both axes and welded into one unreadable orange
-     blob. So the row keeps the accent, and the mark holds still —
-     neutral, like every other decorative mark in this file.
-     It briefly carried the two headline hues instead. That was wrong
-     twice over: it put an accent on a mark that signals nothing, which
-     is the one thing the colour contract at the top of this file
-     forbids, and it repeats two to four times a page, which is a tic
-     rather than an identity. The pair lives where it is earned — see
-     .scissor and .prose blockquote::before. */
+  /* Azure, on the author's call. This mark has been neutral, then the
+     two headline hues, then neutral again, and the history is kept
+     because it names the hazard rather than the taste.
+     The hazard: the chevron used to light TANGERINE on section hover.
+     The h2 is not a link, so the only thing a pointer in this section
+     can act on is a row — lighting the label too meant one pointer lit
+     two things, and on the FIRST row it lit them in the same six
+     pixels, where the label's chevron and the row's hanging arrow
+     overlap on both axes and weld into one unreadable orange blob.
+     Azure at rest clears that, and only that, because it is a different
+     hue from the arrow and it does not move. Two rules keep it clear:
+     this mark never takes tangerine, and it never changes on hover.
+     It also must not run the PAIR. Two hues on a mark that repeats two
+     to four times a page is a tic rather than an identity; the pair
+     lives where it is earned — see .scissor and .prose blockquote.
+     --c-blue is a 3:1 non-text token and a 6x10 mark is non-text, so
+     this sits inside the contract check-tokens.mjs already enforces. */
   .index-label > .name .chev {
-    background: var(--c-line-strong);
+    background: var(--c-blue);
   }
   /* Lighter than the label it sits under, but the underline is solid
      enough to read as a link without hovering. */
