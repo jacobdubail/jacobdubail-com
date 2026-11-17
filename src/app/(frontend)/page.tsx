@@ -60,19 +60,6 @@ export default function HomePage() {
         </IndexSection>
       ) : null}
 
-      {card.colophon.length ? (
-        <IndexSection label="Colophon" group>
-          <dl className="grid grid-cols-[var(--label-w)_minmax(0,1fr)] gap-x-[var(--label-gap)] gap-y-3 pt-4">
-            {card.colophon.map((c) => (
-              <div key={c.label} className="contents">
-                <dt className="pt-0.5 text-sm text-faint">{c.label}</dt>
-                <dd className="text-sm leading-[1.6] text-pretty text-mute">{c.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </IndexSection>
-      ) : null}
-
       {card.contact.length ? (
         <IndexSection label="Contact" group>
           <dl className="grid grid-cols-[var(--label-w)_minmax(0,1fr)] gap-x-[var(--label-gap)] gap-y-3 pt-4">
@@ -98,6 +85,14 @@ export default function HomePage() {
               {card.contactNote}
             </p>
           ) : null}
+        </IndexSection>
+      ) : null}
+      {card.site ? (
+        /* Last, and quiet. See the note in card.ts: as a table above
+           Contact this read as a skills list rather than as a sentence
+           about the page you are looking at. */
+        <IndexSection label="This site" group>
+          <p className="pt-4 text-sm leading-[1.6] text-pretty text-mute">{card.site}</p>
         </IndexSection>
       ) : null}
     </>

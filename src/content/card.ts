@@ -93,31 +93,20 @@ export const card = {
   ],
 
   /**
-   * How this page is built. It is here because the page is the work
-   * sample: a frontend reviewer can check every line of it against what
-   * their browser actually received, which is a stronger claim than any
-   * adjective in the bio.
+   * One line about the page itself, set last and set quietly.
    *
-   * Keep it honest and keep it current. A colophon that has drifted from
-   * the lockfile is worse than none, because it is checkable.
+   * This was a three-row "Colophon" table above Contact, and it read as
+   * a list of technologies the author likes — a skills section by
+   * another name, in the loudest position on the lower half of the
+   * page. The facts were never the problem; the framing and the rank
+   * were. As a closing sentence about THIS PAGE it does the one job it
+   * was ever good for, which is letting a reader check a claim against
+   * what their own browser received.
+   *
+   * Set to null to drop it entirely.
    */
-  colophon: [
-    {
-      label: 'Stack',
-      value:
-        'Next.js 16 (App Router, Cache Components) · React 19.3 · TypeScript, strict · Tailwind v4 · Payload 3 on Postgres',
-    },
-    {
-      label: 'Design',
-      value:
-        'One stylesheet, two hues, a 4px grid. scripts/check-tokens.mjs re-derives every contrast ratio, type step and spacing rank the stylesheet claims and fails the build on drift.',
-    },
-    {
-      label: 'Delivery',
-      value:
-        'Prerendered static, no database read on this route. The only client JavaScript is the theme toggle — and the logo, which fires a volley if you tap Shift three times.',
-    },
-  ],
+  site: 'This page is Next.js 16 and React 19 on Payload, prerendered static with no database read and no client JavaScript beyond the theme toggle. Its stylesheet makes claims — contrast ratios, type steps, which vertical break outranks which — and a script re-derives every one and fails the build the moment a claim stops being true.' as
+    string | null,
 
   /**
    * The contact block. Every row is a profile, which is why every row

@@ -726,8 +726,13 @@
     text-wrap: balance;
     transition: color 0.15s;
   }
-  .entry:hover .entry-title,
-  .entry:focus-visible .entry-title,
+  /* Links only. A Selected work row with nothing to open renders as a
+     div, and a div that turns tangerine under the pointer promises a
+     destination it does not have — the one thing the colour contract at
+     the top of this file is for. The hanging arrow is already gated the
+     same way, in the component, by not rendering at all without an href. */
+  a.entry:hover .entry-title,
+  a.entry:focus-visible .entry-title,
   .entry[data-pending] .entry-title {
     color: var(--c-orange-text);
   }
@@ -790,7 +795,7 @@
       width: 100%;
       text-wrap: pretty;
     }
-    .entry:hover .entry-title {
+    a.entry:hover .entry-title {
       color: inherit;
     }
     .entry-lead,
