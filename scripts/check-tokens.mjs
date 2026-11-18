@@ -110,6 +110,7 @@ const EXPECTED = [
   '--c-orange',
   '--c-orange-text',
   '--c-blue',
+  '--c-blue-text',
 ]
 for (const [name, t] of Object.entries(themes)) {
   const missing = EXPECTED.filter((k) => !(k in t))
@@ -175,13 +176,18 @@ for (const theme of ['light', 'dark']) {
     failures.push(
       `${theme} --c-orange and --c-blue differ by ${Math.round(dC * 1000) / 1000} in OKLab chroma (limit ${CHROMA_TOLERANCE}) — the more saturated word advances`,
     )
-  // The act-on-this pair is two values of one hue: a mark tier and a text
-  // tier. Nothing stopped them converging into one.
-  const tang = deltaE(t['--c-orange'], t['--c-orange-text'])
-  if (tang < 0.02)
-    failures.push(
-      `${theme} --c-orange and --c-orange-text are ΔE ${r2(tang)} apart — the mark and text tiers have converged`,
-    )
+  // Each hue is two values: a mark tier at the 3:1 floor and a text tier
+  // at 4.5:1. Nothing stopped them converging into one. Both ramps are
+  // checked, because either hue can be the acting one — light runs
+  // tangerine forward and dark runs azure forward, so the ramp that is
+  // decorative in one theme is carrying every link in the other.
+  for (const hue of ['--c-orange', '--c-blue']) {
+    const d = deltaE(t[hue], t[`${hue}-text`])
+    if (d < 0.02)
+      failures.push(
+        `${theme} ${hue} and ${hue}-text are ΔE ${r2(d)} apart — the mark and text tiers have converged`,
+      )
+  }
   // The two hues must also stay far enough apart to read as two hues.
   const sep = deltaE(t['--c-orange'], t['--c-blue'])
   if (sep < 0.15)
@@ -904,17 +910,42 @@ for (const [, selector, body] of css.matchAll(/([^\n{}]+)\{([^{}]*)\}/g)) {
 }
 
 // --- Usage ---------------------------------------------------------------
-// The token block says --c-blue is "never body text". Saying it is not the
-// same as it being true, and the colour is only safe at the 3:1 tier.
-// --c-orange is deliberately not checked the same way: it legitimately
-// colours marks all over the stylesheet, and a rule good enough to tell a
-// mark from a label would need to understand the selector, not grep it.
-const BLUE_OK = new Set(['.headline-a'])
-for (const [, selector] of css.matchAll(/([^\n{}]+)\{[^{}]*color:\s*var\(--c-blue\)[^{}]*\}/g)) {
+// The two hues do not mean the same thing in both themes: light runs
+// tangerine forward, dark runs azure forward. A rule that reaches past the
+// role tokens for --c-orange or --c-blue therefore pins one theme's colour
+// into both, which is exactly the bug the reversal exists to prevent and is
+// invisible until someone opens the other theme. The token blocks map the
+// hues onto roles and @theme inline bridges them to Tailwind; everywhere
+// else the hue names are off limits.
+{
+  const spans = []
+  for (const sentinel of ['/* @tokens light */', '/* @tokens dark */', '@theme inline {']) {
+    const i = css.indexOf(sentinel)
+    if (i !== -1) spans.push([i, css.indexOf('\n}', i)])
+  }
+  const exempt = (i) => spans.some(([a, b]) => i >= a && i <= b)
+  for (const m of css.matchAll(/var\(--c-(orange|blue)(-text)?\)/g))
+    if (!exempt(m.index))
+      failures.push(
+        `${m[0]} is used outside the token blocks — rules name roles (--c-act / --c-act-text / --c-sys), never hues`,
+      )
+}
+// The token block says the mark tiers are "never body text". Saying it is
+// not the same as it being true, and they are only safe at the 3:1 tier.
+// The headline is the documented exception: it sets both roles at 36-60px,
+// which is the large-text tier the 3:1 floor is for.
+// .entry-lead is the hanging arrow on an index row: a 16px masked mark
+// driven by currentColor, which is why it sets `color` at all.
+const MARK_AS_TEXT_OK = new Set(['.headline-a', '.headline-b', '.entry-lead', '.mark-act'])
+// The lookbehind matters: border-color is not color, and without it every
+// bordered control reads as a contrast failure.
+for (const [, selector, role] of css.matchAll(
+  /([^\n{}]+)\{[^{}]*(?<![-\w])color:\s*var\(--c-(act|sys)\)[^{}]*\}/g,
+)) {
   const name = selector.trim().split(/\s+/).pop()
-  if (!BLUE_OK.has(name))
+  if (!MARK_AS_TEXT_OK.has(name))
     failures.push(
-      `--c-blue is used as a text colour on "${selector.trim()}" — it only clears the 3:1 tier`,
+      `--c-${role} is used as a text colour on "${selector.trim()}" — it only clears the 3:1 tier, use --c-act-text`,
     )
 }
 const srcDir = join(dirname(fileURLToPath(import.meta.url)), '../src')
@@ -926,6 +957,14 @@ for (const file of walk(srcDir)) {
   const body = readFileSync(file, 'utf8')
   if (/\btext-blue\b/.test(body))
     failures.push(`${file.split('/src/')[1]} uses text-blue — azure is not a text colour`)
+  // A hue utility in a component pins one theme's colour into both. Two
+  // of these survived the reversal and left tangerine arrows on a dark
+  // page whose every other action mark had turned azure, because nothing
+  // about `text-orange` changes when the roles do. Marks take .mark-act.
+  for (const [util] of body.matchAll(/\b(?:text|bg|border|fill)-(?:orange|blue)(?:-text)?\b/g))
+    failures.push(
+      `${file.split('/src/')[1]} uses the hue utility ${util} — components name roles, not hues: use .mark-act`,
+    )
   // About set its opening paragraph at --text-md in --c-mute: two steps
   // lighter than the body it introduced, which inverts the hierarchy and
   // makes the page's first sentence read as a pulled quotation.

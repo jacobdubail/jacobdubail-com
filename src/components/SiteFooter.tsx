@@ -19,7 +19,7 @@ export async function SiteFooter() {
   cacheLife('weeks')
 
   return (
-    <footer className="mt-[var(--gap-footer)] flex flex-wrap items-center gap-x-7 gap-y-4 border-t border-line pt-7 text-sm text-faint [view-transition-name:site-footer]">
+    <footer className="mt-[var(--gap-footer)] flex flex-wrap items-center gap-x-4 gap-y-4 border-t border-line pt-7 text-sm text-faint [view-transition-name:site-footer]">
       <span className="mr-auto">© {new Date().getFullYear()} Jacob Dubail</span>
       <ThemeToggle />
       <BackToTop />

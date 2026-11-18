@@ -9,15 +9,20 @@ export default function NotFound() {
       <h1 className="mb-4 font-serif text-display font-normal tracking-[-0.02em]">
         Nothing at this address.
       </h1>
+      {/* Two active sentences. This read "The writing and project
+          archives are off the air while this site is one page.
+          Everything that is here is on the front page." — nobody put
+          the archives anywhere and nobody keeps them there; the page
+          just reported a state of affairs. See card.ts on voice. */}
       <p className="mb-8 text-ink2">
-        The writing and project archives are off the air while this site is one page. Everything
-        that is here is on the front page.
+        I took the writing and project archives down while this site is one page. The front page
+        holds everything.
       </p>
       <Link
         href="/"
         className="group inline-flex items-center gap-2 text-sm text-mute hover:text-fg"
       >
-        <GappedArrow className="w-3.5 -scale-x-100 text-orange" /> Home
+        <GappedArrow className="mark-act w-3.5 -scale-x-100" /> Home
       </Link>
     </div>
   )
