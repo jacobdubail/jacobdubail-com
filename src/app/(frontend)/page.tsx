@@ -1,9 +1,12 @@
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
-
+import { Bio } from '@/components/Bio'
+import { ContactList, ContactNote } from '@/components/ContactList'
+import { Deck } from '@/components/Deck'
+import { FactList } from '@/components/FactList'
 import { Headline } from '@/components/Headline'
 import { PageHeader } from '@/components/PageHeader'
 import { PageSection } from '@/components/PageSection'
+import { Portrait } from '@/components/Portrait'
+import { SiteNote } from '@/components/SiteNote'
 import { WorkRow } from '@/components/WorkRow'
 import { card } from '@/content/card'
 
@@ -16,82 +19,39 @@ import { card } from '@/content/card'
  * the thing a reader should be holding when they stop scrolling; the
  * letterhead carries the same route for the reader who never scrolls.
  *
+ * This file holds no markup. Every element below belongs to a
+ * component that owns its own classes and takes no `className`, so the
+ * page can say what goes where without being able to restyle it on the
+ * way past. What is left reads as the shape of the page, which is
+ * the only thing a page component should be.
+ *
  * The margin-index components the index routes used are untouched in
  * src/components and globals.css. This page does not import them.
  *
  * No Payload read, so this route prerenders with no database.
  */
-
-/**
- * The portrait is optional and checked on disk, at build, rather than
- * trusted. A path in content that no file answers renders a broken
- * image on the one page a stranger judges you by, and nothing warns
- * about it: next/image would throw at request time, a bare <img> would
- * show the alt text in a 208px box. Checking here means the rail holds
- * either a portrait or nothing, and dropping a file into /public is the
- * whole of adding one.
- */
-const portrait = card.portrait && existsSync(join(process.cwd(), 'public', card.portrait))
-
-/** A fact with no value is a row nobody filled in, not a blank line. */
-const facts = card.facts.filter((f) => f.value)
-
 export default function HomePage() {
   return (
     <>
-      <PageHeader
-        title={
+      <PageHeader>
+        <PageHeader.Title>
           <Headline text={card.headline} blue={card.highlightBlue} orange={card.highlightOrange} />
-        }
-        intro={card.intro}
-        portrait={
-          portrait ? (
-            /* Plain <img>, not next/image: the source is a static file
-               of a known size, the page prerenders with no loader, and
-               an optimiser endpoint is a server round trip on a route
-               whose entire claim is that it needs none. width/height
-               are set so nothing reflows while it decodes. */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className="portrait"
-              src={card.portrait}
-              alt={card.portraitAlt}
-              width={208}
-              height={208}
-              decoding="async"
-            />
-          ) : null
-        }
-        facts={
-          facts.length ? (
-            <dl className="facts">
-              {facts.map((f) => (
-                <div key={f.term}>
-                  <dt>{f.term}</dt>
-                  {/* A list is one line per item. See card.ts: a middot
-                      can only break after itself, so a wrapped value
-                      leaves the separator hanging off the line end. */}
-                  {(Array.isArray(f.value) ? f.value : [f.value]).map((v) => (
-                    <dd key={v}>{v}</dd>
-                  ))}
-                </div>
-              ))}
-            </dl>
-          ) : null
-        }
-      >
-        {/* The bio, in the measure under the deck. One size, one colour
-            — the deck above it is the step up. Three paragraphs at the
-            same size as the sentence introducing them is the wall this
-            page opened as, and a lead paragraph set larger than the
-            deck was the over-correction. */}
-        {card.bio.length ? (
-          <div className="prose mt-7">
-            {card.bio.map((p) => (
-              <p key={p.slice(0, 32)}>{p}</p>
-            ))}
-          </div>
-        ) : null}
+        </PageHeader.Title>
+
+        <PageHeader.Grid>
+          <PageHeader.Rail>
+            <Portrait src={card.portrait} alt={card.portraitAlt} />
+          </PageHeader.Rail>
+
+          <PageHeader.Main>
+            <Deck>{card.intro}</Deck>
+            <Bio paragraphs={card.bio} />
+          </PageHeader.Main>
+
+          <PageHeader.Facts>
+            <FactList facts={card.facts} />
+          </PageHeader.Facts>
+        </PageHeader.Grid>
       </PageHeader>
 
       {card.work.length ? (
@@ -110,45 +70,18 @@ export default function HomePage() {
       ) : null}
 
       {card.site ? (
-        /* Above Contact, not below it, and at body size. It spent the
-           first round set in the smallest, faintest type on the page,
-           last, under the contact block — and all three reviewers of
-           that round independently called it the most distinctive thing
-           here for an engineering reader. Burying your only
-           differentiator in the fine print is a hierarchy decision, and
-           it was the wrong one. */
         <PageSection label="This site" id="site">
-          <div className="rail-row pt-5">
-            <dl className="facts facts-flush">
-              <div>
-                <dt>{card.siteMeta.term}</dt>
-                <dd>{card.siteMeta.value}</dd>
-              </div>
-            </dl>
-            <p className="site-note">{card.site}</p>
-          </div>
+          <SiteNote>
+            <SiteNote.Meta term={card.siteMeta.term} value={card.siteMeta.value} />
+            <SiteNote.Text>{card.site}</SiteNote.Text>
+          </SiteNote>
         </PageSection>
       ) : null}
 
       {card.contact.length ? (
         <PageSection label="Contact" id="contact">
-          <dl className="pt-2">
-            {card.contact.map((r) => (
-              /* No per-row size tier any more — see the .contact-row
-                 comment. Order and the letterhead carry the rank. */
-              <div key={r.label} className="contact-row">
-                <dt>{r.label}</dt>
-                <dd>
-                  {/* Every row is a profile of the same person, which
-                      is what rel="me" is for. */}
-                  <a href={r.href} className="ext ext-link" rel="me">
-                    {r.value}
-                  </a>
-                </dd>
-              </div>
-            ))}
-          </dl>
-          {card.contactNote ? <p className="contact-note rail-offset">{card.contactNote}</p> : null}
+          <ContactList links={card.contact} />
+          <ContactNote>{card.contactNote}</ContactNote>
         </PageSection>
       ) : null}
     </>

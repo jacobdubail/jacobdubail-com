@@ -18,31 +18,23 @@ import type { ReactNode } from 'react'
  * nothing did, and 256px of every rule on the page had nothing
  * underneath it.
  *
- * Spacing is still the stylesheet's, not a prop. `lead` is the first
- * section after the page header; everything after it takes the group
- * step.
+ * Spacing is still the stylesheet's, not a prop. There was a `lead`
+ * boolean that put `is-lead` on the section; the only rule for that
+ * class is `.index-section.is-lead`, so on this element it matched
+ * nothing and nothing ever passed it.
  */
 export function PageSection({
   label,
   id,
   children,
-  lead,
 }: {
   label: string
   /** Anchor target, so the letterhead can link to it. */
   id?: string
   children: ReactNode
-  lead?: boolean
 }) {
   return (
-    <section
-      id={id}
-      /* Joined, not interpolated. prettier-plugin-tailwindcss sorts the
-         classes inside a template literal and ate the leading space off
-         ` is-lead`, which shipped `page-sectionis-lead` — a class that
-         matches nothing, in a file that formats on every commit. */
-      className={['rail-row', 'page-section', lead && 'is-lead'].filter(Boolean).join(' ')}
-    >
+    <section id={id} className="rail-row page-section">
       <h2 className="section-label">
         {label}
         <span className="chev" aria-hidden />
