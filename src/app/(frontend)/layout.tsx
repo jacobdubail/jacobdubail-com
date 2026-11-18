@@ -42,6 +42,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: siteName, template: `%s · ${siteName}` },
   description: card.intro,
+  /* www already 308s to the apex at the Vercel domain, so a crawler
+     cannot reach a second copy of this page by hostname. This is for
+     the URLs a redirect cannot touch: anything that arrives carrying
+     ?utm_source, ?ref or a share parameter is the same document, and
+     without this tag each one is a separate URL to an indexer. '/'
+     resolves against metadataBase, so it follows siteUrl rather than
+     hardcoding the host a second time. */
+  alternates: { canonical: '/' },
   openGraph: { siteName, type: 'website', title: siteName, description: card.intro },
 }
 
