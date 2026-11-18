@@ -1,23 +1,42 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { Headline } from '@/components/Headline'
-import { IndexSection } from '@/components/IndexSection'
 import { PageHeader } from '@/components/PageHeader'
+import { PageSection } from '@/components/PageSection'
 import { WorkRow } from '@/components/WorkRow'
 import { card } from '@/content/card'
 
 /**
  * The whole public site: a card.
  *
- * It is built out of the pieces the index pages used — the same header,
- * the same margin-index section, the same two-column block About's "Now"
- * list uses — so the page reads as a smaller version of the site rather
- * than a different one. Nothing here is a new layout idea, which is what
- * makes bringing the lists back a matter of restoring routes.
+ * Four blocks on one two-column grid — hero, work, the note about the
+ * page, contact — and the order is the argument. What I claim, what I
+ * built, how I think, how to reach me. Contact is last because it is
+ * the thing a reader should be holding when they stop scrolling; the
+ * letterhead carries the same route for the reader who never scrolls.
+ *
+ * The margin-index components the index routes used are untouched in
+ * src/components and globals.css. This page does not import them.
  *
  * No Payload read, so this route prerenders with no database.
  */
-export default function HomePage() {
-  const [lead, ...rest] = card.bio
 
+/**
+ * The portrait is optional and checked on disk, at build, rather than
+ * trusted. A path in content that no file answers renders a broken
+ * image on the one page a stranger judges you by, and nothing warns
+ * about it: next/image would throw at request time, a bare <img> would
+ * show the alt text in a 208px box. Checking here means the rail holds
+ * either a portrait or nothing, and dropping a file into /public is the
+ * whole of adding one.
+ */
+const portrait = card.portrait && existsSync(join(process.cwd(), 'public', card.portrait))
+
+/** A fact with no value is a row nobody filled in, not a blank line. */
+const facts = card.facts.filter((f) => f.value)
+
+export default function HomePage() {
   return (
     <>
       <PageHeader
@@ -25,50 +44,103 @@ export default function HomePage() {
           <Headline text={card.headline} blue={card.highlightBlue} orange={card.highlightOrange} />
         }
         intro={card.intro}
-      />
-
-      {/* Same shape as About's body: the opening sentence is the first
-          paragraph, not a second deck. A lighter, looser line above
-          darker body copy reads as a pulled quotation, and the page
-          already has its deck above. */}
-      <div className="index-offset mt-[var(--gap-art-block)]">
-        {lead ? <p className="prose-lead">{lead}</p> : null}
-        {rest.length ? (
-          <div className="prose">
-            {rest.map((p) => (
+        portrait={
+          portrait ? (
+            /* Plain <img>, not next/image: the source is a static file
+               of a known size, the page prerenders with no loader, and
+               an optimiser endpoint is a server round trip on a route
+               whose entire claim is that it needs none. width/height
+               are set so nothing reflows while it decodes. */
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="portrait"
+              src={card.portrait}
+              alt={card.portraitAlt}
+              width={208}
+              height={208}
+              decoding="async"
+            />
+          ) : null
+        }
+        facts={
+          facts.length ? (
+            <dl className="facts">
+              {facts.map((f) => (
+                <div key={f.term}>
+                  <dt>{f.term}</dt>
+                  {/* A list is one line per item. See card.ts: a middot
+                      can only break after itself, so a wrapped value
+                      leaves the separator hanging off the line end. */}
+                  {(Array.isArray(f.value) ? f.value : [f.value]).map((v) => (
+                    <dd key={v}>{v}</dd>
+                  ))}
+                </div>
+              ))}
+            </dl>
+          ) : null
+        }
+      >
+        {/* The bio, in the measure under the deck. One size, one colour
+            — the deck above it is the step up. Three paragraphs at the
+            same size as the sentence introducing them is the wall this
+            page opened as, and a lead paragraph set larger than the
+            deck was the over-correction. */}
+        {card.bio.length ? (
+          <div className="prose mt-7">
+            {card.bio.map((p) => (
               <p key={p.slice(0, 32)}>{p}</p>
             ))}
           </div>
         ) : null}
-      </div>
+      </PageHeader>
 
       {card.work.length ? (
-        /* First section after the bio, so it takes the `lead` break; the
-           two below it are `group`, which is the smaller one. The order
-           is the argument: what I built, how this page is built, how to
-           reach me. */
-        <IndexSection label="Selected work" group lead>
+        <PageSection label="Selected work" id="work">
           {card.work.map((w) => (
             <WorkRow
               key={w.title}
               title={w.title}
               meta={w.meta}
               description={w.description}
+              emphasis={w.emphasis}
               href={w.href}
             />
           ))}
-        </IndexSection>
+        </PageSection>
+      ) : null}
+
+      {card.site ? (
+        /* Above Contact, not below it, and at body size. It spent the
+           first round set in the smallest, faintest type on the page,
+           last, under the contact block — and all three reviewers of
+           that round independently called it the most distinctive thing
+           here for an engineering reader. Burying your only
+           differentiator in the fine print is a hierarchy decision, and
+           it was the wrong one. */
+        <PageSection label="This site" id="site">
+          <div className="rail-row pt-5">
+            <dl className="facts facts-flush">
+              <div>
+                <dt>{card.siteMeta.term}</dt>
+                <dd>{card.siteMeta.value}</dd>
+              </div>
+            </dl>
+            <p className="site-note">{card.site}</p>
+          </div>
+        </PageSection>
       ) : null}
 
       {card.contact.length ? (
-        <IndexSection label="Contact" group>
-          <dl className="grid grid-cols-[var(--label-w)_minmax(0,1fr)] gap-x-[var(--label-gap)] gap-y-3 pt-4">
+        <PageSection label="Contact" id="contact">
+          <dl className="pt-2">
             {card.contact.map((r) => (
-              <div key={r.label} className="contents">
-                <dt className="pt-0.5 text-sm text-faint">{r.label}</dt>
-                <dd className="leading-[1.55]">
-                  {/* Every row is a profile of the same person, which is
-                      what rel="me" is for. */}
+              /* No per-row size tier any more — see the .contact-row
+                 comment. Order and the letterhead carry the rank. */
+              <div key={r.label} className="contact-row">
+                <dt>{r.label}</dt>
+                <dd>
+                  {/* Every row is a profile of the same person, which
+                      is what rel="me" is for. */}
                   <a href={r.href} className="ext ext-link" rel="me">
                     {r.value}
                   </a>
@@ -76,24 +148,8 @@ export default function HomePage() {
               </div>
             ))}
           </dl>
-          {/* Outside the <dl>, because a <p> is not a permitted child of
-              one, and indented by the same --gutter the dl's own label
-              column spends — so the note starts on the values' left edge
-              at every width rather than in the label channel. */}
-          {card.contactNote ? (
-            <p className="mt-4 ml-[var(--gutter)] text-sm text-pretty text-faint">
-              {card.contactNote}
-            </p>
-          ) : null}
-        </IndexSection>
-      ) : null}
-      {card.site ? (
-        /* Last, and quiet. See the note in card.ts: as a table above
-           Contact this read as a skills list rather than as a sentence
-           about the page you are looking at. */
-        <IndexSection label="This site" group>
-          <p className="pt-4 text-sm leading-[1.6] text-pretty text-mute">{card.site}</p>
-        </IndexSection>
+          {card.contactNote ? <p className="contact-note rail-offset">{card.contactNote}</p> : null}
+        </PageSection>
       ) : null}
     </>
   )

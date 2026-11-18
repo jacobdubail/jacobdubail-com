@@ -9,6 +9,10 @@ import type { ReactNode } from 'react'
  *   default      two unlike lists, the largest break on the page
  *   group        sibling lists of the same kind (year groups, Now/Archive)
  *   lead         first section in a stack that does not follow a page header
+ *
+ * `flush` drops the rule that opens the list. It is for a section whose
+ * content draws its own boundary — the contact card has a border, and a
+ * hairline 4px above a bordered object is a second edge for one idea.
  */
 export function IndexSection({
   label,
@@ -16,14 +20,18 @@ export function IndexSection({
   children,
   group,
   lead,
+  flush,
 }: {
   label: string
   aside?: ReactNode
   children: ReactNode
   group?: boolean
   lead?: boolean
+  flush?: boolean
 }) {
-  const cls = ['index-section', group && 'is-group', lead && 'is-lead'].filter(Boolean).join(' ')
+  const cls = ['index-section', group && 'is-group', lead && 'is-lead', flush && 'is-flush']
+    .filter(Boolean)
+    .join(' ')
   return (
     <section className={cls}>
       <h2 className="index-label">

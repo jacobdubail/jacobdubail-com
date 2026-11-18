@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#fdfcfa' },
-    { media: '(prefers-color-scheme: dark)', color: '#101318' },
+    { media: '(prefers-color-scheme: dark)', color: '#14120f' },
   ],
 }
 
@@ -70,7 +70,7 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <div className="band" aria-hidden />
-        <div className="mx-auto max-w-[784px] px-6 pt-[var(--gap-top)] pb-[var(--gap-bottom)] max-lg:px-8 max-sm:px-5">
+        <div className="mx-auto max-w-[912px] px-6 pt-[var(--gap-top)] pb-[var(--gap-bottom)] max-lg:px-8">
           <SiteNav />
           <main id="main">{children}</main>
           <SiteFooter />

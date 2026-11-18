@@ -1,17 +1,30 @@
 'use client'
 
 /**
- * Light/dark switch. Follows the OS until clicked; the choice is stored per
- * browser.
+ * Light/dark switch. Follows the OS until clicked; the choice is stored
+ * per browser.
  *
- * Both labels are rendered and CSS picks one, so the button is correct in the
- * static HTML and never flips on hydration — a server snapshot of "light"
- * would have flashed the wrong word at every dark-mode visitor.
+ * Both labels are rendered and CSS picks one, so the button is correct
+ * in the static HTML and never flips on hydration — a server snapshot
+ * of "light" would have flashed the wrong word at every dark-mode
+ * visitor.
  *
- * The visible word names the current theme and the sr-only clarifier names the
- * action, so the accessible name contains the visible label (WCAG 2.5.3). An
- * aria-label here would win the name computation outright and silently discard
- * the visible word.
+ * Two things changed after the first design round, where all three
+ * reviewers stopped on this control for the same two reasons.
+ *
+ * It had no affordance: a bare grey word in the footer, indistinguishable
+ * from the copyright line beside it. It is a bordered control now, in
+ * the same vocabulary .chip-state already uses — one border token, one
+ * radius, nothing new — with a half-filled disc that is the thing the
+ * button does rather than a borrowed sun and moon. The page draws two
+ * shapes, the chevron and the arrow, and neither of them is a crescent.
+ *
+ * And the word named the current state, so "Light" could equally have
+ * meant "you are in light mode" or "click for light mode". It names the
+ * destination now. The sr-only clarifier closes the rest of the gap and
+ * keeps the accessible name a superset of the visible label (WCAG
+ * 2.5.3) — an aria-label here would win the name computation outright
+ * and silently discard the visible word.
  */
 export function ThemeToggle() {
   return (
@@ -24,11 +37,12 @@ export function ThemeToggle() {
           localStorage.setItem('theme', next ? 'dark' : 'light')
         } catch {}
       }}
-      className="tap cursor-pointer hover:text-fg"
+      className="toggle"
     >
-      <span className="dark:hidden">Light</span>
-      <span className="not-dark:hidden">Dark</span>
-      <span className="sr-only"> theme — switch to the other one</span>
+      <span className="polarity" aria-hidden />
+      <span className="dark:hidden">Dark</span>
+      <span className="not-dark:hidden">Light</span>
+      <span className="sr-only"> theme, switch to it</span>
     </button>
   )
 }
