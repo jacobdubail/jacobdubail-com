@@ -13,14 +13,24 @@ import './globals.css'
 const franklin = localFont({
   src: '../../fonts/LibreFranklin.woff2',
   variable: '--font-franklin',
-  weight: '100 900',
+  /* The file carries 400-600 and nothing else. This page sets 400, 500
+     and 600 and never asks for another, so the rest of the axis was
+     deltas nobody rendered. Declaring a range the file cannot cover
+     makes the browser synthesise the missing weights, so this line and
+     the file have to move together. */
+  weight: '400 600',
   display: 'swap',
   adjustFontFallback: 'Arial',
 })
 const fraunces = localFont({
   src: '../../fonts/Fraunces.woff2',
   variable: '--font-fraunces',
-  weight: '100 900',
+  /* One weight, because the serif is only ever set at 400: the h1 says
+     font-normal and .work-title is a span inheriting body weight. The
+     optical size axis STAYS variable — the browser feeds it the
+     rendered size, and at 60px that is worth more than the 16KB
+     pinning it would save. */
+  weight: '400',
   display: 'swap',
   adjustFontFallback: 'Times New Roman',
 })
