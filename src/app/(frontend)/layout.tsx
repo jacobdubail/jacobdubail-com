@@ -4,8 +4,10 @@ import type { ReactNode } from 'react'
 
 import { SiteFooter } from '@/components/SiteFooter'
 import { SiteNav } from '@/components/SiteNav'
+import { StructuredData } from '@/components/StructuredData'
 import { themeScript } from '@/components/ThemeToggle'
 import { card } from '@/content/card'
+import { plainText } from '@/lib/format'
 import { siteName, siteUrl } from '@/lib/site'
 
 import './globals.css'
@@ -48,10 +50,17 @@ const jetbrains = localFont({
  * redirects to the home page is worse than advertising none. Both come
  * back with /writing.
  */
+/* The deck's own string with its line-breaking characters taken
+   out. See plainText: "hands-on" is set with a non-breaking hyphen
+   so it cannot break across a 390px column, and a search result, a
+   share card and a JSON-LD field all want the spelling a reader
+   would type. */
+const summary = plainText(card.intro)
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: siteName, template: `%s · ${siteName}` },
-  description: card.intro,
+  description: summary,
   /* www already 308s to the apex at the Vercel domain, so a crawler
      cannot reach a second copy of this page by hostname. This is for
      the URLs a redirect cannot touch: anything that arrives carrying
@@ -60,7 +69,27 @@ export const metadata: Metadata = {
      resolves against metadataBase, so it follows siteUrl rather than
      hardcoding the host a second time. */
   alternates: { canonical: '/' },
-  openGraph: { siteName, type: 'website', title: siteName, description: card.intro },
+  /* `url` resolves against metadataBase, so og:url names the canonical
+     apex however the reader arrived — off a www link, a share
+     parameter, or a preview deployment. Without it a scraper takes the
+     URL it happened to fetch, and the card for ?utm_source=... is a
+     second card for the same page.
+
+     The image comes from opengraph-image.tsx in this directory, which
+     Next finds and measures on its own; nothing names it here. Twitter
+     falls back to the Open Graph image, so the only twitter field worth
+     setting is the shape of the card: `summary` crops a 1200x630 card
+     into a small square and throws away the headline, which is the one
+     thing on it worth reading. */
+  openGraph: {
+    siteName,
+    type: 'website',
+    title: siteName,
+    description: summary,
+    url: '/',
+    locale: 'en_US',
+  },
+  twitter: { card: 'summary_large_image', title: siteName, description: summary },
 }
 
 export const viewport: Viewport = {
@@ -79,6 +108,22 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* The Markdown twin of this page, announced rather than left to
+            be guessed at. rel="describedby" is the relation the llms.txt
+            proposal settled on, and it is the accurate one: /llms.txt
+            describes the site, where rel="alternate" would claim it is
+            another encoding of this document and invite a client to
+            fetch one instead of the other. */}
+        <link rel="describedby" type="text/plain" href="/llms.txt" />
+        <StructuredData
+          profile={card.profile}
+          siteUrl={siteUrl}
+          siteName={siteName}
+          description={summary}
+          image={card.portrait}
+          imageAlt={card.portraitAlt}
+          sameAs={card.contact.map((c) => c.href)}
+        />
       </head>
       <body id="top" className="relative">
         <a

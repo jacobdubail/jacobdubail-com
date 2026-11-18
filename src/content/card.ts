@@ -100,6 +100,62 @@ export const card = {
   ] as { term: string; value: string | string[] }[],
 
   /**
+   * The same page, said in a form a machine can parse.
+   *
+   * This feeds the JSON-LD in StructuredData.tsx and the Markdown in
+   * llms.txt, and it exists because both of those have to describe a
+   * person without guessing. A model reading the prose above can work
+   * out the employer and the city; it can also work out a seniority, a
+   * tenure and a salary band that nobody wrote down. Giving it the
+   * fields outright is how the page stops being a surface to infer
+   * from and starts being a source to quote.
+   *
+   * THE RULE IS THE ONE `emphasis` FOLLOWS: nothing here may assert
+   * what the visible page does not. Every value below is already on
+   * screen — `employer` is in `intro`, `locality` and `region` are the
+   * Based row, `jobTitles` is the Role row, `knows` is the Stack row
+   * plus the standards named in `work`. Structured data is not a place
+   * to put the claims that were too thin for the copy. A reviewer who
+   * finds a certification in the JSON-LD and not in the bio has
+   * learned something about the author, and it is not the thing the
+   * certification said.
+   *
+   * There is no availability field, for the reason written out on
+   * `facts`: this is a public, indexed document linked from the
+   * author's own profiles, and it reaches his employer before it
+   * reaches a recruiter.
+   */
+  profile: {
+    /** Exactly as it appears everywhere else. One spelling, or the
+        graph describes two people. */
+    name: 'Jacob Dubail',
+    /** The Role rail, as separate values rather than one string. */
+    jobTitles: ['Engineering manager', 'Frontend architect'],
+    /** Named in `intro`. The URL is what makes it an organisation a
+        consumer can resolve rather than a word. */
+    employer: { name: 'Fueled', url: 'https://fueled.com' },
+    /** The Based rail, split so an agent filtering on region does not
+        have to parse a comma. No street and no postal code: the page
+        says which island, and a home address is not a fact this site
+        is in the business of publishing. */
+    locality: 'Whidbey Island',
+    region: 'WA',
+    country: 'US',
+    /** The Stack rail, then the standards and surfaces `work` names.
+        Keep it to what a reader could point at on the page. */
+    knows: [
+      'React',
+      'Next.js',
+      'TypeScript',
+      'Frontend architecture',
+      'Engineering management',
+      'React Server Components',
+      'Web accessibility',
+      'Web performance',
+    ],
+  },
+
+  /**
    * The portrait, on the rail beside the deck.
    *
    * The path is resolved against /public and the page renders without
