@@ -40,3 +40,27 @@ export function readingTime(content: unknown): number {
   walk((content as { root?: LexicalNode })?.root)
   return Math.max(1, Math.round(words / 230))
 }
+
+/**
+ * Copy with its typography taken back out, for readers that do not
+ * render it.
+ *
+ * The visible page sets "hands‑on" with a non-breaking hyphen and
+ * binds the headline's accent words with non-breaking spaces, because
+ * both control where a line may break in a 390px column. A meta
+ * description has no column. Neither does a JSON-LD string or a
+ * Markdown file, and in all three the character stops being invisible
+ * and starts being a mismatch: U+2011 is not the hyphen anyone types,
+ * so "hands-on" no longer matches the page that claims it.
+ *
+ * So the rule is the boundary, not the string — card.ts keeps the
+ * typography and every machine-readable surface strips it on the way
+ * out.
+ */
+export function plainText(s: string) {
+  /* Written as escapes on purpose. A literal non-breaking space
+     inside a character class is invisible in a diff and in a code
+     review, and the next person to touch this line cannot see what
+     it matches. */
+  return s.replace(/\u2011/g, '-').replace(/[\u00a0\u202f]/g, ' ')
+}
